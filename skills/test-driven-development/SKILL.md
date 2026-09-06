@@ -44,6 +44,16 @@ Write code before the test? Delete it. Start over.
 
 Implement fresh from tests. Period.
 
+## Seams: where tests go
+
+A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
+
+**Test only at pre-agreed seams.** Before writing the first test, write down the seams under test and confirm them with your human partner. No test is written at an unconfirmed seam. You cannot test everything, so agreeing the seams up front is how testing effort lands on the critical paths and the complex logic instead of every edge case.
+
+Ask: "What's the public interface, and which seams should we test?"
+
+When the shape of that interface is itself in question (how deep the module is, where the seam belongs, what it should expose), consult the `codebase-design` skill for the module / interface / depth / seam / adapter vocabulary if it is installed.
+
 ## Red-Green-Refactor
 
 ```dot
@@ -202,6 +212,7 @@ Next failing test for next feature.
 | **Minimal** | One thing. "and" in name? Split it. | `test('validates email and domain and whitespace')` |
 | **Clear** | Name describes behavior | `test('test1')` |
 | **Shows intent** | Demonstrates desired API | Obscures what code should do |
+| **Tautological** | Expected value comes from an independent source: a known-good literal, a worked example, the spec | `expect(add(a, b)).toBe(a + b)` — the assertion recomputes the answer the way the code does, so it passes by construction and can never disagree with the code |
 
 When writing or changing any test, read [writing-good-tests.md](writing-good-tests.md) for the rules that keep tests honest:
 - Name the production change that would make the test fail — before writing it
