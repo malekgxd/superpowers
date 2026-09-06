@@ -71,6 +71,8 @@ artifact, never the approval.
 | "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
 | "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |
 | "They approved the spike, so the follow-up change is approved too" | Each task gets its own classification and its own approval. |
+| "I'll write the intent after the design, once I know what it is" | The intent is what the design is checked against. Write it first, get the yes, commit, then design. |
+| "Twelve questions, one per message, is thorough" | On the architectural path that is twelve round trips with no view of dependencies. Ask the frontier in one round with recommended answers. |
 
 ## Checklist
 
@@ -93,14 +95,45 @@ your path and complete them in order.
 
 **Architectural:**
 1. **Explore project context** — check files, docs, recent commits
-2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+2. **Write the intent** — before any question, approach, or design: write `docs/superpowers/intents/YYYY-MM-DD-<topic>.md` using the Intent template below, present it, and STOP. On an explicit yes, set `Status: accepted` and commit it. Nothing downstream starts before that commit. A heading with nothing to say gets one line saying so ("None known."); never drop a heading.
+3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
+4. **Ask in frontier rounds** — the frontier is every question whose prerequisites are already settled. Ask the whole frontier in one numbered message, each question with your recommended answer. A question that depends on another still open in this round waits for the next round. Facts are your job: anything answerable from the repo or the environment is looked up (dispatch `subagent_type: Explore`, `model: sonnet` when it is more than a grep), never asked. Done when the frontier is empty and nothing is silently assumed. Round format:
+
+   ```
+   ❓ **Q1** - **<title>**: <question, options if any>
+   ➡️ <your recommended answer>
+   ---
+   ❓ **Q2** - ...
+   ```
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` with the header line `Intent: <path to the accepted intent file>`, and commit
+8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below); also every Constraint in the intent is satisfied by the spec or explicitly waived with a reason
+9. **User reviews written spec** — ask user to review the spec file before proceeding
+10. **Challenge the spec** — if a `challenge` skill is installed, invoke it on the committed spec with the intent path in its brief; rule on every finding and Flag, record the rulings in the spec, commit
+11. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+
+**Intent template** (exactly these five H2 headings, this order):
+
+```markdown
+# Intent: <topic>
+Author: <who asked>. Status: draft
+
+## Problem
+<what hurts, from the asker's perspective>
+
+## Proposed outcome
+<what is true when this is done>
+
+## Affected users and systems
+<who and what this touches>
+
+## Constraints
+<what the design must respect; the challenger checks the spec against these>
+
+## Open questions
+<what is not yet decided; "None known." if empty>
+```
 
 ## Process Flow
 
@@ -114,7 +147,10 @@ digraph brainstorming {
     "Investigate; report recommendation" [shape=doublecircle];
     "Implement via normal workflow (no plan doc)" [shape=doublecircle];
     "Explore project context" [shape=box];
-    "Ask clarifying questions" [shape=box];
+    "Write intent; human accepts?" [shape=diamond];
+    "Commit accepted intent" [shape=box];
+    "Ask in frontier rounds" [shape=box];
+    "Challenge the spec" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
@@ -133,8 +169,11 @@ digraph brainstorming {
     "Human approves?" -> "Investigate; report recommendation" [label="spike: yes"];
     "Human approves?" -> "Implement via normal workflow (no plan doc)" [label="bounded: yes"];
     "Hidden complexity? Upgrade path" -> "Classify: spike / bounded / architectural";
-    "Explore project context" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
+    "Explore project context" -> "Write intent; human accepts?";
+    "Write intent; human accepts?" -> "Write intent; human accepts?" [label="no, revise"];
+    "Write intent; human accepts?" -> "Commit accepted intent" [label="yes"];
+    "Commit accepted intent" -> "Ask in frontier rounds";
+    "Ask in frontier rounds" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
@@ -142,12 +181,14 @@ digraph brainstorming {
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "User reviews spec?";
     "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
+    "User reviews spec?" -> "Challenge the spec" [label="approved"];
+    "Challenge the spec" -> "Invoke writing-plans skill" [label="rulings recorded"];
 }
 ```
 
-**Terminal states are path-bound.** Architectural: the ONLY skill you
-invoke after brainstorming is writing-plans — never frontend-design,
+**Terminal states are path-bound.** Architectural: after the spec is
+approved, the ONLY skills you invoke are `challenge` (on the committed
+spec, if installed) and then writing-plans — never frontend-design,
 mcp-builder, or any other implementation skill. Bounded: after
 approval, implementation proceeds directly through the normal
 development workflow; no plan document. Spike: the terminal state is a
@@ -166,9 +207,9 @@ is the whole process.
 - Check out the current project state first (files, docs, recent commits)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
-- For appropriately-scoped projects, ask questions one at a time to refine the idea
+- Bounded path only: ask questions one at a time to refine the idea; only one question per message - if a topic needs more exploration, break it into multiple questions
+- Architectural path: ask in frontier rounds (checklist step 4); the intent file is already committed by the time the first round is asked
 - Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**
@@ -225,10 +266,11 @@ After the spec review loop passes, ask the user to review the written spec befor
 
 Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
 
-**Implementation:**
+**Challenge, then implementation:**
 
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- If a `challenge` skill is installed, invoke it on the committed spec. Its brief carries four things: the one-sentence claim, the spec path, the intent path, and the settled constraints. Rule on every finding and Flag, record the rulings in the spec, commit.
+- Then invoke the writing-plans skill to create a detailed implementation plan
+- Do NOT invoke any other skill. challenge (when installed) and then writing-plans are the only next steps.
 
 ## Visual Companion
 
