@@ -44,8 +44,10 @@ override it:
   one. No spec file, no implementation plan document.
 - **Architectural** — new projects, new subsystems, changes that
   restructure how components fit together or alter interfaces others
-  depend on. Follow the full process: questions, approaches, sectioned
-  design, written spec, then the writing-plans skill.
+  depend on. Follow the full process: intent (written, accepted,
+  committed first), frontier-round questions, approaches, sectioned
+  design, written spec, then `challenge` on the spec if installed, then
+  the writing-plans skill.
 
 When in doubt between two paths, take the heavier one. The ratchet is
 one-way: hidden complexity discovered mid-task upgrades the path —
@@ -244,6 +246,7 @@ is the whole process.
 
 **Documentation:**
 
+- The spec's header carries the line `Intent: <path to the accepted intent file>` so the challenger and the plan can find it
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
   - (User preferences for spec location override this default)
 - Use elements-of-style:writing-clearly-and-concisely skill if available
@@ -256,6 +259,7 @@ After writing the spec document, look at it with fresh eyes:
 2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
 3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+5. **Intent check:** Every line under the intent's Constraints heading is either satisfied by the spec or explicitly waived in the spec with a reason. An unmentioned constraint is a gap; fix it.
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
