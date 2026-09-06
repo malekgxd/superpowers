@@ -42,6 +42,17 @@ deliverable needs them; split only where a reviewer could meaningfully
 reject one task while approving its neighbor. Each task ends with an
 independently testable deliverable.
 
+**Wide refactors are the exception.** A wide refactor is one mechanical
+change (rename a column, retype a shared symbol) whose blast radius fans
+across the whole codebase, so a single edit breaks many call sites at
+once and no single task can land green. Do not force it into one task;
+sequence it as **expand–contract**. First expand: add the new form beside
+the old so nothing breaks. Then migrate the call sites in batches sized
+by blast radius (per package, per directory), each batch its own task
+that depends on the expand, keeping the suite green batch to batch
+because the old form still exists. Finally contract: delete the old form
+once no caller remains, in a task that depends on every migrate batch.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
