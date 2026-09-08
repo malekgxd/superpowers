@@ -160,6 +160,11 @@ Subagent (general-purpose):
 
     ## Output Format
 
+    Write your full report to [REVIEW_FILE] in the format below. Then
+    reply with ONLY: the Spec Compliance verdict line, the Task quality
+    verdict, and one line per Critical or Important issue — the detail
+    lives in the file, and the controller reads the file, not your reply.
+
     ### Spec Compliance
 
     - ✅ Spec compliant | ❌ Issues found: [what's missing/extra/misunderstood,
@@ -202,6 +207,10 @@ Subagent (general-purpose):
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
   package to (`scripts/review-package PLAN_FILE BASE HEAD` prints the unique
   path it wrote; the package never enters the controller's context)
+- `[REVIEW_FILE]` — REQUIRED: where the reviewer writes its full report,
+  named after the brief (`…/task-N-brief.md` → `…/task-N-review.md`) in
+  the same workspace; re-reviews append to it
 
-**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Task quality verdict
+**Reviewer writes** the full report (Spec Compliance, Strengths, Issues,
+Assessment) to `[REVIEW_FILE]` and **returns** only the Spec Compliance
+verdict, the Task quality verdict, and the Critical/Important one-liners
