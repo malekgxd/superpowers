@@ -214,4 +214,5 @@ Subagent (general-purpose):
 
 **Reviewer writes** the full report (Spec Compliance, Strengths, Issues,
 Assessment) to `[REVIEW_FILE]` and **returns** only the Spec Compliance
-verdict, the Task quality verdict, and the Critical/Important one-liners
+verdict, any ⚠️ cannot-verify lines, the Task quality verdict, and the
+Critical/Important one-liners
