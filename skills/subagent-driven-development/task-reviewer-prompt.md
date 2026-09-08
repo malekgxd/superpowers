@@ -137,8 +137,8 @@ Subagent (general-purpose):
     "yes." A tight report that cites lines gives the controller everything
     it needs.
 
-    Your final message is the report itself: begin directly with the
-    spec-compliance verdict. Every line is a verdict, a finding with
+    Your report is the file (see Output Format): begin it directly with
+    the spec-compliance verdict. Every line is a verdict, a finding with
     file:line, or a check you ran — no preamble, no process narration,
     no closing summary.
 
@@ -161,9 +161,10 @@ Subagent (general-purpose):
     ## Output Format
 
     Write your full report to [REVIEW_FILE] in the format below. Then
-    reply with ONLY: the Spec Compliance verdict line, the Task quality
-    verdict, and one line per Critical or Important issue — the detail
-    lives in the file, and the controller reads the file, not your reply.
+    reply with ONLY: the Spec Compliance verdict line, any ⚠️ cannot-verify
+    lines, the Task quality verdict, and one line per Critical or
+    Important issue. The controller acts on your reply; the detail lives
+    in the file, where the re-reviewer and the human read it later.
 
     ### Spec Compliance
 
