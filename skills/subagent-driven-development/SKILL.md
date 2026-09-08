@@ -136,7 +136,8 @@ a ledger file, not only in todos.
 - Each plan owns a workspace: at skill start, run this skill's
   `scripts/sdd-workspace PLAN_FILE` — it prints the plan's git-ignored
   directory (`<repo-root>/.superpowers/sdd/<plan-basename>/`), home to
-  every artifact for THIS plan: ledger, briefs, reports, review packages.
+  every artifact for THIS plan: ledger, briefs, reports, reviews, review
+  packages.
   Another plan's directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <N>: complete` line are DONE
@@ -266,9 +267,9 @@ and fix-round diffs need it.
   returns only status, commits, a one-line test summary, and concerns.
 - **Review file:** name it the same way (brief `…/task-N-brief.md` →
   review `…/task-N-review.md`) and put it in the reviewer's dispatch. The
-  reviewer writes its full report there and returns only the two verdicts
-  and the Critical/Important one-liners; each re-review appends its round
-  to the same file. Findings that only live in a reply are lost the moment
+  reviewer writes its full report there and returns only the two verdicts,
+  any ⚠️ cannot-verify lines, and the Critical/Important one-liners; each
+  re-review appends its round to the same file. Findings that only live in a reply are lost the moment
   the session compacts; the file outlives the run.
 - A dispatch prompt describes one task, not the session's history. Do not
   paste accumulated prior-task summaries ("state after Tasks 1-3") into
@@ -379,14 +380,16 @@ Everything else enters the loop. A fix round is one fix dispatch plus one
 scoped re-review. Five rounds maximum per task:
 
 **Rounds 1-3 — resume the original implementer.** Send it the open findings
-verbatim. Its context is intact: it knows the task, the code, and its own
-choices. If your harness cannot send another message to a live subagent,
+verbatim plus the review-file path, where the file:line evidence behind each
+one-liner lives. Its context is intact: it knows the task, the code, and its
+own choices. If your harness cannot send another message to a live subagent,
 dispatch a fresh implementer carrying the brief path, the report-file path,
-and the findings — the report file is the persistent memory either way.
+the review-file path, and the findings — the report and review files are the
+persistent memory either way.
 
 **Rounds 4-5 — dispatch a fresh implementer on a more capable model** (per
-Model Selection), with the brief path, the report-file path, the open
-findings, and this framing: "A prior implementer attempted this task
+Model Selection), with the brief path, the report-file path, the
+review-file path, the open findings, and this framing: "A prior implementer attempted this task
 [N] times; you own it now. Read the report file for what was tried." A loop
 that survives three resumes usually means the implementer cannot see its
 own problem — fresh eyes and a capability bump in one move.
@@ -404,9 +407,8 @@ where FIX_BASE is the head the previous review saw, and dispatch
 [re-review-prompt.md](re-review-prompt.md) with the findings list, the
 brief, the report file, the review file (it appends this round's report
 there under `## Re-review round R`), and the printed diff path. The
-re-reviewer verdicts
-each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix
-diff only. New Critical/Important breakage in the fix diff joins the open
+re-reviewer verdicts each finding ADDRESSED or NOT ADDRESSED and flags new
+breakage in the fix diff only. New Critical/Important breakage in the fix diff joins the open
 findings list. Out-of-scope observations go to the ledger as deferred
 minors — they never extend the loop.
 
