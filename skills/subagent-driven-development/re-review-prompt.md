@@ -76,8 +76,9 @@ Subagent (general-purpose):
     Append the report below to [REVIEW_FILE] under a heading
     `## Re-review round [ROUND]` (the file already holds the first review;
     never overwrite it). Your final message is the same report: begin
-    directly with the first finding's verdict. Every line is a verdict, a finding with file:line,
-    or a check you ran — no preamble, no process narration.
+    directly with the first finding's verdict. Every line is a verdict, a
+    finding with file:line, or a check you ran — no preamble, no process
+    narration.
 
     ### Finding Verdicts
 
