@@ -87,7 +87,7 @@ digraph process {
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [shape=box];
     "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" [shape=box];
-    "Final review clean: delete this plan's workspace" [shape=box];
+    "Final review clean: archive this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, ledger check, read plan, pre-flight review" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -116,8 +116,8 @@ digraph process {
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" [label="no"];
     "Dispatch final code reviewer (../requesting-code-review/code-reviewer.md)" -> "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals";
-    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: delete this plan's workspace";
-    "Final review clean: delete this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    "Final findings? ONE fix dispatch, one scoped re-review, adjudicate residuals" -> "Final review clean: archive this plan's workspace";
+    "Final review clean: archive this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -264,6 +264,12 @@ and fix-round diffs need it.
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
   returns only status, commits, a one-line test summary, and concerns.
+- **Review file:** name it the same way (brief `…/task-N-brief.md` →
+  review `…/task-N-review.md`) and put it in the reviewer's dispatch. The
+  reviewer writes its full report there and returns only the two verdicts
+  and the Critical/Important one-liners; each re-review appends its round
+  to the same file. Findings that only live in a reply are lost the moment
+  the session compacts; the file outlives the run.
 - A dispatch prompt describes one task, not the session's history. Do not
   paste accumulated prior-task summaries ("state after Tasks 1-3") into
   later dispatches — a real session's dispatch hit 42k chars of which 99%
@@ -287,7 +293,7 @@ Template: [implementer-prompt.md](implementer-prompt.md)
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package (`scripts/review-package PLAN_FILE BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path and the review file.
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -322,9 +328,9 @@ needed.
   call. Use the BASE you recorded before dispatching the implementer —
   never `HEAD~1`, which silently truncates multi-commit tasks. Never
   dispatch a task reviewer without a diff file.
-- **Reviewer inputs:** the task reviewer gets three paths — the same brief
-  file, the report file, and the review package — plus the global
-  constraints that bind the task.
+- **Reviewer inputs:** the task reviewer gets four paths — the same brief
+  file, the report file, the review package, and the review file it writes
+  (`…/task-N-review.md`) — plus the global constraints that bind the task.
 - The global-constraints block you hand the reviewer is its attention
   lens. Copy the binding requirements verbatim from the plan's Global
   Constraints section or the spec: exact values, exact formats, and the
@@ -396,7 +402,9 @@ whole suite.
 **The re-review is scoped.** Run `scripts/review-package PLAN_FILE FIX_BASE HEAD`
 where FIX_BASE is the head the previous review saw, and dispatch
 [re-review-prompt.md](re-review-prompt.md) with the findings list, the
-brief, the report file, and the printed diff path. The re-reviewer verdicts
+brief, the report file, the review file (it appends this round's report
+there under `## Re-review round R`), and the printed diff path. The
+re-reviewer verdicts
 each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix
 diff only. New Critical/Important breakage in the fix diff joins the open
 findings list. Out-of-scope observations go to the ledger as deferred
@@ -448,7 +456,9 @@ The final whole-branch review gets a package too: run
 `scripts/review-package PLAN_FILE MERGE_BASE HEAD` (MERGE_BASE = the commit the
 branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
-one file instead of re-deriving the branch diff with git commands. Dispatch
+one file instead of re-deriving the branch diff with git commands, and
+name `<workspace>/final-review.md` as the file it writes its full report
+to (it returns the verdict and the Important-or-worse one-liners). Dispatch
 on the most capable available model (see Model Selection), using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
@@ -470,19 +480,22 @@ finishing-a-development-branch presents the options.
 
 ## Finish
 
-Before you delete anything, collect every ledger line containing `Ruling:` —
+Before you archive anything, collect every ledger line containing `Ruling:` —
 preflight rulings, parked findings, breaker adjudications, all of them — into
 your final message under "Rulings I made", in the order you made them, each
 with what it costs if wrong. The list is exhaustive: if the ledger holds a
 ruling, the list holds it. That list is the only place the decisions you
 took on your human partner's behalf reach them — they read it and rework
-whatever you got wrong. A ruling that dies with the workspace was a decision
-made in secret.
+whatever you got wrong. A ruling that only lives in the archive was a
+decision made in secret.
 
 When the final whole-branch review is clean and its fixes are merged,
-delete this plan's workspace (`rm -rf <workspace>`) — the git history is
-the record now. Sibling directories belong to other plans; leave them
-alone.
+archive this plan's workspace: run this skill's `scripts/sdd-archive
+PLAN_FILE`. It moves the workspace to
+`.superpowers/sdd/_archive/<plan-basename>-<timestamp>/`, still git-ignored,
+so the ledger, reports and reviews outlive the run for tooling that reads
+them, while a rerun of the same plan starts from an empty workspace. Never
+`rm -rf` it. Sibling directories belong to other plans; leave them alone.
 
 Use superpowers:finishing-a-development-branch.
 
@@ -524,7 +537,7 @@ Implementer: [Later]
   - Self-review: Found I missed --force flag, added it
   - Committed
 
-[Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
+[Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path and the review file]
 Task reviewer: Spec ✅ - all requirements met, nothing extra.
   Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
 
@@ -539,7 +552,7 @@ Implementer: [No questions]
   - 8/8 tests passing
   - Committed
 
-[Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path]
+[Run review-package PLAN_FILE BASE HEAD; dispatch task reviewer with the printed path and the review file]
 Task reviewer: Spec ❌:
   - Missing: Progress reporting (spec says "report every 100 items")
   Issues (Important): Magic number (100)
@@ -562,7 +575,7 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 
-[Delete this plan's workspace — the record now lives in git]
+[Archive this plan's workspace: scripts/sdd-archive PLAN_FILE — git holds the code, the archive holds the ledger and reviews]
 
 Done! Using superpowers:finishing-a-development-branch.
 ```

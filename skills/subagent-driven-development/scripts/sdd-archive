@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Archive a finished plan's SDD workspace instead of deleting it.
+#
+# Moves .superpowers/sdd/<plan-basename>/ to .superpowers/sdd/_archive/<plan-basename>-<YYYYMMDD-HHMM>/
+# (still covered by the workspace's self-ignoring .gitignore). The ledger, briefs, reports and
+# reviews then outlive the run for tooling that reads them, while a rerun of the same plan starts
+# from an empty workspace — a complete old ledger left in place would make the controller dispatch
+# nothing. The path comes from sdd-workspace, so the two can never disagree about where a plan lives.
+#
+# Usage: sdd-archive PLAN_FILE     (prints the archive directory)
+set -euo pipefail
+
+if [ $# -ne 1 ]; then
+  echo "usage: sdd-archive PLAN_FILE" >&2
+  exit 2
+fi
+
+here=$(cd "$(dirname "$0")" && pwd)
+dir=$("$here/sdd-workspace" "$1")
+if [ ! -f "$dir/progress.md" ]; then
+  rmdir "$dir" 2>/dev/null || true   # sdd-workspace creates the directory; do not leave an empty one behind
+  echo "no ledger at $dir; nothing to archive" >&2
+  exit 2
+fi
+
+base=$(dirname "$dir")
+dest="$base/_archive/$(basename "$dir")-$(date -u +%Y%m%d-%H%M)"
+[ -e "$dest" ] && dest="$dest-$$"   # two finishes in the same minute
+mkdir -p "$base/_archive"
+mv "$dir" "$dest"
+echo "$dest"
