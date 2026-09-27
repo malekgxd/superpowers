@@ -38,6 +38,9 @@ if [ -x "$D/scripts/sdd-archive" ]; then
   ws=$(cd "$T" && "$D/scripts/sdd-workspace" docs/feature-plan.md); echo '# SDD ledger — plan: docs/feature-plan.md' > "$ws/progress.md"
   dest2=$(cd "$T" && "$D/scripts/sdd-archive" docs/feature-plan.md)
   [ "$dest2" != "$dest" ] && [ -f "$dest2/progress.md" ] && [ -f "$dest/progress.md" ] && ok "second archive in the same minute keeps both" || bad "same-minute archive collided"
+  ws=$(cd "$T" && "$D/scripts/sdd-workspace" docs/feature-plan.md); echo brief > "$ws/task-1-brief.md"
+  rc=0; (cd "$T" && "$D/scripts/sdd-archive" docs/feature-plan.md >/dev/null 2>&1) || rc=$?
+  [ "$rc" -eq 2 ] && [ -f "$ws/plan-path" ] && [ -f "$ws/task-1-brief.md" ] && ok "ledgerless nonempty workspace kept with its marker" || bad "ledgerless nonempty workspace: rc=$rc, marker or brief removed"
 fi
 
 E="$(cd "$D/../executing-plans" && pwd)/SKILL.md"

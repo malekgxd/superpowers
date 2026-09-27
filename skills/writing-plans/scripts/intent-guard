@@ -5,14 +5,18 @@ set -euo pipefail
 [ $# -eq 1 ] || { echo "usage: intent-guard SPEC_FILE" >&2; exit 2; }
 spec=$1; [ -f "$spec" ] || { echo "intent-guard: no spec at $spec" >&2; exit 2; }
 refuse() { echo "intent-guard: REFUSE $1"; exit 1; }
-intent=$(sed -n 's/^Intent:[[:space:]]*//p' "$spec" | head -1)
+# Tolerate `**Intent:** path`, a backticked path and trailing whitespace.
+intent=$(sed -nE 's/^(\*\*)?Intent:(\*\*)?[[:space:]]*//p' "$spec" | head -1 | sed -E 's/[[:space:]]+$//; s/^`(.*)`$/\1/')
 [ -n "$intent" ] || refuse "spec has no Intent: line"
 [ -L "$intent" ] && refuse "intent is a symlink"
 [ -f "$intent" ] || refuse "intent file missing: $intent"
 export GIT_LITERAL_PATHSPECS=1
 git ls-files --error-unmatch -- "$intent" >/dev/null 2>&1 || refuse "intent is untracked"
 git diff --quiet HEAD -- "$intent" || refuse "intent has uncommitted changes"
-# Status comes from the committed blob, not the worktree copy.
-status=$(git cat-file -p "HEAD:./$intent" 2>/dev/null | grep -m1 -oE '(^|[^A-Za-z])Status: [A-Za-z-]+' | sed 's/^[^S]*//' || true)
-[ "$status" = "Status: accepted" ] || refuse "intent not Status: accepted"
+# Header and Status come from the committed blob, not the worktree copy.
+# Template: line 1 `# Intent: <topic>`, then `Author: <who>. Status: draft|accepted`.
+blob=$(git cat-file -p "HEAD:./$intent" 2>/dev/null || true)
+[[ "$(head -1 <<<"$blob")" == "# Intent:"* ]] || refuse "not an intent file"
+status=$(grep -m1 '^Author:' <<<"$blob" | sed -nE 's/^Author:.*[[:space:]]Status: ([A-Za-z-]+)[[:space:]]*$/\1/p' || true)
+[ "$status" = "accepted" ] || refuse "intent not Status: accepted"
 echo "intent-guard: OK $intent"

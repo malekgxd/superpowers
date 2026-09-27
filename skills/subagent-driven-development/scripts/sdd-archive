@@ -18,8 +18,12 @@ fi
 here=$(cd "$(dirname "$0")" && pwd)
 dir=$("${BASH:-bash}" "$here/sdd-workspace" "$1")
 if [ ! -f "$dir/progress.md" ]; then
-  rm -f "$dir/plan-path"              # sdd-workspace writes this marker (upstream 6.4.1)
-  rmdir "$dir" 2>/dev/null || true    # sdd-workspace creates the directory; do not leave an empty one behind
+  # sdd-workspace creates the directory and its plan-path marker; remove them only when the
+  # marker is the sole entry. Briefs or reviews left by an interrupted run keep their owner.
+  if [ "$(ls -A "$dir")" = "plan-path" ]; then
+    rm -f "$dir/plan-path"
+    rmdir "$dir" 2>/dev/null || true
+  fi
   echo "no ledger at $dir; nothing to archive" >&2
   exit 2
 fi

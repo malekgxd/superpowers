@@ -42,5 +42,13 @@ sed -i 's/Status: draft/Status: accepted/' "$T/assume/docs/superpowers/intents/i
 expect assume 1 'intent not Status: accepted'
 mk notstatus draft; printf '# Intent: x\nNotStatus: accepted\n' > "$T/notstatus/docs/superpowers/intents/i.md"; C notstatus n
 expect notstatus 1 'intent not Status: accepted'
+mk skilllike draft; printf -- '---\nname: x\n---\nWhen approved, set Status: accepted and commit.\n' > "$T/skilllike/docs/superpowers/intents/i.md"; C skilllike s
+expect skilllike 1 'not an intent file'
+mk bodyonly draft; printf '# Intent: x\nStatus: accepted\nAuthor: t. Status: draft\n' > "$T/bodyonly/docs/superpowers/intents/i.md"; C bodyonly b
+expect bodyonly 1 'intent not Status: accepted'
+spec() { mk "$1" accepted; printf '# Spec\n%s\n' "$2" > "$T/$1/docs/superpowers/specs/s.md"; C "$1" s; }
+spec bold '**Intent:** docs/superpowers/intents/i.md'; expect bold 0 'intent-guard: OK'
+spec ticked 'Intent: `docs/superpowers/intents/i.md`'; expect ticked 0 'intent-guard: OK'
+spec trailing 'Intent: docs/superpowers/intents/i.md   '; expect trailing 0 'intent-guard: OK'
 [ "$fail" -eq 0 ] && echo "plans: OK"
 exit $fail
