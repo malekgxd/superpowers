@@ -18,8 +18,11 @@ git ls-files --error-unmatch -- "$intent" >/dev/null 2>&1 || refuse "intent is u
 git diff --quiet HEAD -- "$intent" || refuse "intent has uncommitted changes"
 # Header and Status come from the committed blob, not the worktree copy.
 # Template: line 1 `# Intent: <topic>`, then `Author: <who>. Status: draft|accepted`.
-git cat-file -p "HEAD:./$intent" | nul_free "$(git cat-file -s "HEAD:./$intent")" || refuse "intent file contains NUL bytes"
-blob=$(git cat-file -p "HEAD:./$intent" 2>/dev/null || true)
+# Resolve HEAD once: both reads below use the same immutable blob id.
+oid=$(git rev-parse --verify --quiet "HEAD:./$intent" || true)
+[ -n "$oid" ] || refuse "intent not in HEAD"
+git cat-file blob "$oid" | nul_free "$(git cat-file -s "$oid")" || refuse "intent file contains NUL bytes"
+blob=$(git cat-file blob "$oid" 2>/dev/null || true)
 [[ "$(head -1 <<<"$blob")" == "# Intent:"* ]] || refuse "not an intent file"
 author=$(grep -m1 '^Author:' <<<"$blob" || true)
 [[ "$author" != *Status:*Status:* && "$author" =~ [[:space:]]Status:\ accepted[[:space:]]*$ ]] || refuse "intent not Status: accepted"

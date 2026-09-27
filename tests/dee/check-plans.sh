@@ -58,5 +58,19 @@ mk nulstatus accepted; printf '# Intent: x\nAuthor: t. Status: ac\000cepted\n' >
 expect nulstatus 1 'intent file contains NUL bytes'
 mk nulspec accepted; printf '# Spec\nIntent: docs/superpowers/intents/i\000.md\n' > "$T/nulspec/docs/superpowers/specs/s.md"
 expect nulspec 1 'spec contains NUL bytes'
+# HEAD moving between reads: a git stub serves a NUL-forged blob to every HEAD-path content read after the first.
+mk moved accepted; printf '# Intent: x\nAuthor: t. Status: xaccepted\n' > "$T/moved/docs/superpowers/intents/i.md"; C moved m
+mkdir -p "$T/bin"; cat > "$T/bin/git" <<STUB
+#!/usr/bin/env bash
+if [[ "\$1 \$2 \$3" == "cat-file -p HEAD:"* || ( "\$1" == show && "\$2" == HEAD:* ) ]]; then
+  n=\$(( \$(cat "$T/reads" 2>/dev/null || echo 0) + 1 )); echo \$n > "$T/reads"
+  [ \$n -gt 1 ] && { printf '# Intent: x\nAuthor: t. Status: ac\000cepted\n'; exit 0; }
+fi
+exec $(command -v git) "\$@"
+STUB
+chmod +x "$T/bin/git"
+out=$(cd "$T/moved" && PATH="$T/bin:$PATH" bash "$G" docs/superpowers/specs/s.md 2>&1) && rc=0 || rc=$?
+[ "$rc" -eq 1 ] && grep -qF 'intent not Status: accepted' <<<"$out" && ok "guard moved-HEAD: reads the resolved blob once" || bad "guard moved-HEAD: rc=$rc out=$out"
+[ "$(grep -c 'HEAD:' "$G")" -eq 1 ] && grep -q 'oid=$(git rev-parse --verify --quiet "HEAD:./$intent"' "$G" && ok "guard resolves HEAD:./intent once" || bad "guard resolves HEAD more than once"
 [ "$fail" -eq 0 ] && echo "plans: OK"
 exit $fail
