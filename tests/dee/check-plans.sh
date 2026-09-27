@@ -4,7 +4,7 @@ D="$(cd "$(dirname "$0")/../../skills/writing-plans" && pwd)"; F="$D/SKILL.md"; 
 fail=0
 ok() { echo "OK   $1"; }; bad() { echo "FAIL $1"; fail=1; }
 grep -qF -- '**Wide refactors are the exception.**' "$F" && grep -qF -- 'expand–contract' "$F" && ok "expand-contract" || bad "MISSING: expand-contract"
-grep -qF -- '## Intent Guard' "$F" && grep -qF -- 'bash scripts/intent-guard' "$F" && ok "SKILL runs the intent guard" || bad "SKILL lacks the intent guard"
+grep -qF -- '## Intent Guard' "$F" && grep -qF -- 'scripts/intent-guard' "$F" && grep -qF -- 'from the repo that holds the spec' "$F" && ok "SKILL runs the intent guard" || bad "SKILL lacks the intent guard"
 grep -qF -- '**Intent:**' "$F" && ok "plan header carries Intent" || bad "plan header lacks Intent"
 grep -qF -- 'challenge the committed plan' "$F" && ok "handoff challenges the plan" || bad "handoff lacks the plan challenge"
 grep -qF -- 'I recommend Subagent-driven' "$F" && ok "handoff recommends Subagent-driven" || bad "handoff does not recommend Subagent-driven"

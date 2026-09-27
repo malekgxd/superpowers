@@ -18,9 +18,11 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 
 ## Intent Guard
 
-Before any planning work, run `bash scripts/intent-guard <spec path>` from
-the repo that holds the spec. On `REFUSE`, stop and tell your human partner
-the reason it printed; the intent must be accepted and committed first
+Before any planning work, from the repo that holds the spec, run this
+skill's `scripts/intent-guard` by its full path:
+`bash <this skill's base directory>/scripts/intent-guard <spec path>`.
+On `REFUSE`, stop and tell your human partner the reason it printed; the
+intent must be accepted and committed first
 (brainstorming writes it). Anything other than an `intent-guard: OK` line
 (a REFUSE, a missing spec, any error) means stop. With no spec at all,
 stop: planning starts from a spec that names its intent.
