@@ -40,5 +40,10 @@ if [ -x "$D/scripts/sdd-archive" ]; then
   [ "$dest2" != "$dest" ] && [ -f "$dest2/progress.md" ] && [ -f "$dest/progress.md" ] && ok "second archive in the same minute keeps both" || bad "same-minute archive collided"
 fi
 
+E="$(cd "$D/../executing-plans" && pwd)/SKILL.md"
+grep -qiF -- "delete this plan's workspace" "$E" && bad "executing-plans still deletes the workspace" || ok "executing-plans archives the workspace"
+grep -qF -- 'sdd-archive PLAN_FILE' "$E" && ok "executing-plans finishes with sdd-archive" || bad "executing-plans never calls sdd-archive"
+grep -qF -- 'Declined to judge' "$D/SKILL.md" && ok "SDD final review returns Declined-to-judge lines" || bad "SDD final review drops Declined-to-judge lines"
+
 [ "$fail" -eq 0 ] && echo "sdd: OK"
 exit $fail

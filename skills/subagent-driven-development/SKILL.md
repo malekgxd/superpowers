@@ -459,12 +459,14 @@ branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands, and
 name `<workspace>/final-review.md` as the file it writes its full report
-to (it returns the verdict and the Important-or-worse one-liners). Dispatch
+to (it returns the verdict, the Important-or-worse one-liners, and its Declined to judge lines). Dispatch
 on the most capable available model (see Model Selection), using
 superpowers:requesting-code-review's
 [code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
 the ledger's deferred-minor and parked lines so it can triage which must be
-fixed before merge.
+fixed before merge. Every Declined to judge line is a ruling you make and
+ledger, exactly like a plan conflict: `Final: Ruling: <behavior the reviewer
+set aside> — <why it stands or why it is now a finding> — <cost if wrong>`.
 
 If the final whole-branch review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.
