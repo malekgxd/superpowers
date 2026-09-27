@@ -17,6 +17,6 @@ git diff --quiet HEAD -- "$intent" || refuse "intent has uncommitted changes"
 # Template: line 1 `# Intent: <topic>`, then `Author: <who>. Status: draft|accepted`.
 blob=$(git cat-file -p "HEAD:./$intent" 2>/dev/null || true)
 [[ "$(head -1 <<<"$blob")" == "# Intent:"* ]] || refuse "not an intent file"
-status=$(grep -m1 '^Author:' <<<"$blob" | sed -nE 's/^Author:.*[[:space:]]Status: ([A-Za-z-]+)[[:space:]]*$/\1/p' || true)
-[ "$status" = "accepted" ] || refuse "intent not Status: accepted"
+author=$(grep -m1 '^Author:' <<<"$blob" || true)
+[[ "$author" != *Status:*Status:* && "$author" =~ [[:space:]]Status:\ accepted[[:space:]]*$ ]] || refuse "intent not Status: accepted"
 echo "intent-guard: OK $intent"

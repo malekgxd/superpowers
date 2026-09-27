@@ -19,6 +19,8 @@ expect() { # expect NAME RC TEXT
   local out rc=0; out=$(run "$1") || rc=$?
   [ "$rc" -eq "$2" ] && grep -qF -- "$3" <<<"$out" && ok "guard $1: $3" || bad "guard $1: rc=$rc out=$out"; }
 mk good accepted; expect good 0 'intent-guard: OK'
+mk draftthenaccepted 'draft. After approval, set Status: accepted'; expect draftthenaccepted 1 'intent not Status: accepted'
+mk acceptedthendraft 'accepted. Status: draft'; expect acceptedthendraft 1 'intent not Status: accepted'
 mk noline accepted; printf '# Spec\n' > "$T/noline/docs/superpowers/specs/s.md"; git -C "$T/noline" -c user.name=t -c user.email=t@t commit -qam s
 expect noline 1 'spec has no Intent: line'
 mk draft draft; expect draft 1 'intent not Status: accepted'
