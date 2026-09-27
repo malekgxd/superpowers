@@ -112,7 +112,7 @@ Subagent (general-purpose):
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
-- `[DIFF_FILE]` — the path `scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
+- `[DIFF_FILE]` — the path `bash scripts/review-package PLAN_FILE FIX_BASE HEAD` printed
 - `[REVIEW_FILE]` — the task's review file (`…/task-N-review.md`, written by
   the first review); this round's report is appended there
 - `[ROUND]` — the fix round number, R of 5
