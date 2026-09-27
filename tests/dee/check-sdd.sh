@@ -18,6 +18,8 @@ grep -qF -- 'rm -rf <workspace>' "$D/SKILL.md" && bad "SKILL still deletes the w
 grep -qF -- 'scripts/sdd-archive' "$D/SKILL.md" && ok "SKILL finishes with sdd-archive" || bad "SKILL never calls sdd-archive"
 grep -qF -- 'delete this plan' "$D/SKILL.md" && bad "SKILL still says delete this plan" || ok "process flow says archive"
 [ -x "$D/scripts/sdd-archive" ] && ok "sdd-archive is executable" || bad "scripts/sdd-archive missing or not executable"
+grep -qF -- '"${BASH:-bash}" "$here/sdd-workspace"' "$D/scripts/sdd-archive" && ok "sdd-archive calls sdd-workspace via bash" || bad "sdd-archive execs sdd-workspace directly"
+grep -qE -- '(^|[^/])scripts/sdd-archive' "$D/SKILL.md" && ! grep -qE -- '(^|[^h] )`?scripts/sdd-archive' "$D/SKILL.md" && ok "SKILL calls sdd-archive via bash" || bad "SKILL calls sdd-archive without bash"
 
 # Fixture: a throwaway repo with one plan, one workspace holding a ledger.
 if [ -x "$D/scripts/sdd-archive" ]; then

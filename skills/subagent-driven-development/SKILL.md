@@ -491,7 +491,7 @@ whatever you got wrong. A ruling that only lives in the archive was a
 decision made in secret.
 
 When the final whole-branch review is clean and its fixes are merged,
-archive this plan's workspace: run this skill's `scripts/sdd-archive
+archive this plan's workspace: run this skill's `bash scripts/sdd-archive
 PLAN_FILE`. It moves the workspace to
 `.superpowers/sdd/_archive/<plan-basename>-<timestamp>/`, still git-ignored,
 so the ledger, reports and reviews outlive the run for tooling that reads
@@ -576,7 +576,7 @@ Re-reviewer: Missing progress reporting — ADDRESSED (src/recovery.js:41).
 [Run review-package PLAN_FILE MERGE_BASE HEAD; dispatch final code-reviewer, most capable model]
 Final reviewer: All requirements met. Deferred minors triaged: none block merge.
 
-[Archive this plan's workspace: scripts/sdd-archive PLAN_FILE — git holds the code, the archive holds the ledger and reviews]
+[Archive this plan's workspace: bash scripts/sdd-archive PLAN_FILE — git holds the code, the archive holds the ledger and reviews]
 
 Done! Using superpowers:finishing-a-development-branch.
 ```

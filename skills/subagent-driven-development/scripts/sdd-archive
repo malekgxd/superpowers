@@ -16,9 +16,10 @@ if [ $# -ne 1 ]; then
 fi
 
 here=$(cd "$(dirname "$0")" && pwd)
-dir=$("$here/sdd-workspace" "$1")
+dir=$("${BASH:-bash}" "$here/sdd-workspace" "$1")
 if [ ! -f "$dir/progress.md" ]; then
-  rmdir "$dir" 2>/dev/null || true   # sdd-workspace creates the directory; do not leave an empty one behind
+  rm -f "$dir/plan-path"              # sdd-workspace writes this marker (upstream 6.4.1)
+  rmdir "$dir" 2>/dev/null || true    # sdd-workspace creates the directory; do not leave an empty one behind
   echo "no ledger at $dir; nothing to archive" >&2
   exit 2
 fi
