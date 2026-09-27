@@ -29,5 +29,18 @@ out=$(cd "$T/good" && bash "$G" docs/superpowers/specs/missing.md 2>&1) && rc=0 
 mk untracked accepted; git -C "$T/untracked" rm -q --cached docs/superpowers/intents/i.md
 expect untracked 1 'intent is untracked'
 mk dirty accepted; echo edit >> "$T/dirty/docs/superpowers/intents/i.md"; expect dirty 1 'intent has uncommitted changes'
+C() { git -C "$T/$1" -c user.name=t -c user.email=t@t commit -qam "$2"; }
+mk sym accepted; printf '# Intent: x\nAuthor: t. Status: accepted\n' > "$T/outside.md"
+ln -sf "$T/outside.md" "$T/sym/docs/superpowers/intents/i.md"; C sym link
+expect sym 1 'intent is a symlink'
+mk glob draft; git -C "$T/glob" mv docs/superpowers/intents/i.md docs/superpowers/intents/ia.md
+printf '# Spec\nIntent: docs/superpowers/intents/i?.md\n' > "$T/glob/docs/superpowers/specs/s.md"; C glob g
+printf '# Intent: x\nAuthor: t. Status: accepted\n' > "$T/glob/docs/superpowers/intents/i?.md"
+expect glob 1 'intent is untracked'
+mk assume draft; git -C "$T/assume" update-index --assume-unchanged docs/superpowers/intents/i.md
+sed -i 's/Status: draft/Status: accepted/' "$T/assume/docs/superpowers/intents/i.md"
+expect assume 1 'intent not Status: accepted'
+mk notstatus draft; printf '# Intent: x\nNotStatus: accepted\n' > "$T/notstatus/docs/superpowers/intents/i.md"; C notstatus n
+expect notstatus 1 'intent not Status: accepted'
 [ "$fail" -eq 0 ] && echo "plans: OK"
 exit $fail

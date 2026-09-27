@@ -7,9 +7,12 @@ spec=$1; [ -f "$spec" ] || { echo "intent-guard: no spec at $spec" >&2; exit 2; 
 refuse() { echo "intent-guard: REFUSE $1"; exit 1; }
 intent=$(sed -n 's/^Intent:[[:space:]]*//p' "$spec" | head -1)
 [ -n "$intent" ] || refuse "spec has no Intent: line"
+[ -L "$intent" ] && refuse "intent is a symlink"
 [ -f "$intent" ] || refuse "intent file missing: $intent"
-status=$(grep -m1 -o 'Status: [A-Za-z-]*' "$intent" || true)
-[ "$status" = "Status: accepted" ] || refuse "intent not Status: accepted"
+export GIT_LITERAL_PATHSPECS=1
 git ls-files --error-unmatch -- "$intent" >/dev/null 2>&1 || refuse "intent is untracked"
 git diff --quiet HEAD -- "$intent" || refuse "intent has uncommitted changes"
+# Status comes from the committed blob, not the worktree copy.
+status=$(git cat-file -p "HEAD:./$intent" 2>/dev/null | grep -m1 -oE '(^|[^A-Za-z])Status: [A-Za-z-]+' | sed 's/^[^S]*//' || true)
+[ "$status" = "Status: accepted" ] || refuse "intent not Status: accepted"
 echo "intent-guard: OK $intent"
