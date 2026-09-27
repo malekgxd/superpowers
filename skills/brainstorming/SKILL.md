@@ -26,6 +26,8 @@ recognize and correct, grounded in what they want to accomplish.
    relevant constraints, and success criteria in a short note your partner
    can assess. Separate what they said from assumptions. Invite correction
    and incorporate their answer before treating this as the design brief.
+   On the architectural path the intent file is this write-back: write it
+   with the Intent template below, not as a separate note.
 3. **Carry intent into the design.** Preserve the agreed understanding in
    the selected path's design artifact: the written spec for architectural
    work, or the in-chat design/probe for bounded work and spikes. Check
@@ -43,10 +45,12 @@ selected path's prerequisites:
 
 - Spike: the human partner approves the question and probe.
 - Bounded: the human partner approves the short in-chat design.
-- Architectural: the human partner reviews and approves the written spec,
-  then reviews the written implementation plan and selects its execution
-  method. Conversational design approval only permits writing the spec;
-  written-spec approval only permits invoking writing-plans.
+- Architectural: the human partner accepts and commits the intent,
+  then reviews and approves the written spec; the spec is challenged
+  (if a `challenge` skill is installed) and its rulings recorded; then
+  the partner reviews the written implementation plan and selects its
+  execution method. Conversational design approval only permits writing
+  the spec. Written-spec approval only permits `challenge` and then writing-plans.
 
 A reply approves the stage actually presented. Approval of an idea or
 feature scope does not approve artifacts that do not exist yet. Resume
@@ -132,7 +136,7 @@ your path and complete them in order.
 
 **Architectural:**
 1. **Explore project context** — check files, docs, recent commits
-2. **Write the intent** — before any question, approach, or design: write `docs/superpowers/intents/YYYY-MM-DD-<topic>.md` using the Intent template below, present it, and STOP. On an explicit yes, set `Status: accepted` and commit it. Nothing downstream starts before that commit. A heading with nothing to say gets one line saying so ("None known."); never drop a heading.
+2. **Write the intent** — before any design question, approach, or design (one purpose question may come first): write `docs/superpowers/intents/YYYY-MM-DD-<topic>.md` using the Intent template below, present it, and STOP. On an explicit yes, set `Status: accepted` and commit it. Nothing downstream starts before that commit. A heading with nothing to say gets one line saying so ("None known."); never drop a heading.
 3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 4. **Ask in frontier rounds** — the frontier is every question whose prerequisites are already settled. Ask the whole frontier in one numbered message, each question with your recommended answer. A question that depends on another still open in this round waits for the next round. Facts are your job: anything answerable from the repo or the environment is looked up (dispatch `subagent_type: Explore`, `model: sonnet` when it is more than a grep), never asked. Done when the frontier is empty and nothing is silently assumed. Round format:
 

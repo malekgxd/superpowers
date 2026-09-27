@@ -18,5 +18,11 @@ need '"Challenge the spec" -> "Invoke writing-plans skill"'
 need 'Bounded path only: ask questions one at a time'
 gone 'Do NOT invoke any other skill. writing-plans is the next step.'
 gone '3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria'
+need '2. **Write the intent** — before any design question'
+gone '2. **Write the intent** — before any question, approach, or design'
+need 'On the architectural path the intent file is this write-back'
+need 'accepts and commits the intent'
+need 'Written-spec approval only permits `challenge` and then writing-plans'
+gone 'written-spec approval only permits invoking writing-plans'
 [ "$fail" -eq 0 ] && echo "brainstorming: OK"
 exit $fail
