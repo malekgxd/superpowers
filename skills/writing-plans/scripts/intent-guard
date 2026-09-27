@@ -5,6 +5,9 @@ set -euo pipefail
 [ $# -eq 1 ] || { echo "usage: intent-guard SPEC_FILE" >&2; exit 2; }
 spec=$1; [ -f "$spec" ] || { echo "intent-guard: no spec at $spec" >&2; exit 2; }
 refuse() { echo "intent-guard: REFUSE $1"; exit 1; }
+# $(...) silently drops NUL bytes, so refuse them on the byte stream before any parsing.
+nul_free() { [ "$(tr -d '\000' | wc -c)" -eq "$1" ]; }
+nul_free "$(wc -c < "$spec")" < "$spec" || refuse "spec contains NUL bytes"
 # Tolerate `**Intent:** path`, a backticked path and trailing whitespace.
 intent=$(sed -nE 's/^(\*\*)?Intent:(\*\*)?[[:space:]]*//p' "$spec" | head -1 | sed -E 's/[[:space:]]+$//; s/^`(.*)`$/\1/')
 [ -n "$intent" ] || refuse "spec has no Intent: line"
@@ -15,6 +18,7 @@ git ls-files --error-unmatch -- "$intent" >/dev/null 2>&1 || refuse "intent is u
 git diff --quiet HEAD -- "$intent" || refuse "intent has uncommitted changes"
 # Header and Status come from the committed blob, not the worktree copy.
 # Template: line 1 `# Intent: <topic>`, then `Author: <who>. Status: draft|accepted`.
+git cat-file -p "HEAD:./$intent" | nul_free "$(git cat-file -s "HEAD:./$intent")" || refuse "intent file contains NUL bytes"
 blob=$(git cat-file -p "HEAD:./$intent" 2>/dev/null || true)
 [[ "$(head -1 <<<"$blob")" == "# Intent:"* ]] || refuse "not an intent file"
 author=$(grep -m1 '^Author:' <<<"$blob" || true)

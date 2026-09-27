@@ -52,5 +52,11 @@ spec() { mk "$1" accepted; printf '# Spec\n%s\n' "$2" > "$T/$1/docs/superpowers/
 spec bold '**Intent:** docs/superpowers/intents/i.md'; expect bold 0 'intent-guard: OK'
 spec ticked 'Intent: `docs/superpowers/intents/i.md`'; expect ticked 0 'intent-guard: OK'
 spec trailing 'Intent: docs/superpowers/intents/i.md   '; expect trailing 0 'intent-guard: OK'
+mk nulhead accepted; printf '# In\000tent: x\nAuthor: t. Status: accepted\n' > "$T/nulhead/docs/superpowers/intents/i.md"; C nulhead n
+expect nulhead 1 'intent file contains NUL bytes'
+mk nulstatus accepted; printf '# Intent: x\nAuthor: t. Status: ac\000cepted\n' > "$T/nulstatus/docs/superpowers/intents/i.md"; C nulstatus n
+expect nulstatus 1 'intent file contains NUL bytes'
+mk nulspec accepted; printf '# Spec\nIntent: docs/superpowers/intents/i\000.md\n' > "$T/nulspec/docs/superpowers/specs/s.md"
+expect nulspec 1 'spec contains NUL bytes'
 [ "$fail" -eq 0 ] && echo "plans: OK"
 exit $fail
