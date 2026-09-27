@@ -16,6 +16,15 @@ Write implementation plans for an engineer who has not seen this codebase or thi
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
 - (User preferences for plan location override this default)
 
+## Intent Guard
+
+Before any planning work, run `bash scripts/intent-guard <spec path>` from
+the repo that holds the spec. On `REFUSE`, stop and tell your human partner
+the reason it printed; the intent must be accepted and committed first
+(brainstorming writes it). Anything other than an `intent-guard: OK` line
+(a REFUSE, a missing spec, any error) means stop. With no spec at all,
+stop: planning starts from a spec that names its intent.
+
 ## Scope Check
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
@@ -77,6 +86,8 @@ once no caller remains, in a task that depends on every migrate batch.
 
 **Spec:** [path to the spec/design doc this plan implements — the plan
 argues from the spec, so the spec travels with it; executors read both]
+
+**Intent:** [the spec's `Intent:` path, which the guard checked]
 
 ## Global Constraints
 
@@ -189,6 +200,8 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
+Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan and record its rulings in the plan; the handoff waits for that.
+
 After saving and self-reviewing the plan, link it for your human partner
 to read. If they have already explicitly supplied an execution method, ask
 them to review the plan and confirm it captures what they want; wait for that
@@ -202,7 +215,7 @@ them to review the plan and choose an execution method before implementation.
 - **Subagent-driven** - A fresh subagent implements each task and a fresh reviewer checks it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh context per task and per review.
 - **Native** - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
 
-**For this plan I recommend <one of the two>, because <one sentence from the plan: how much the tasks depend on each other's interfaces, how many there are, what a shipped mistake would cost>. Does the plan capture what you want, and which approach should we use?"**
+**For this plan I recommend Subagent-driven, because <one sentence from the plan>; Native stays available when you prefer it. Does the plan capture what you want, and which approach should we use?"**
 
 **When an execution method has already been supplied:**
 

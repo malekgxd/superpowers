@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Refuse to plan from a spec whose intent is not a committed, accepted intent file.
+# Usage: intent-guard SPEC_FILE   (run from the repo that holds the spec)
+set -euo pipefail
+[ $# -eq 1 ] || { echo "usage: intent-guard SPEC_FILE" >&2; exit 2; }
+spec=$1; [ -f "$spec" ] || { echo "intent-guard: no spec at $spec" >&2; exit 2; }
+refuse() { echo "intent-guard: REFUSE $1"; exit 1; }
+intent=$(sed -n 's/^Intent:[[:space:]]*//p' "$spec" | head -1)
+[ -n "$intent" ] || refuse "spec has no Intent: line"
+[ -f "$intent" ] || refuse "intent file missing: $intent"
+status=$(grep -m1 -o 'Status: [A-Za-z-]*' "$intent" || true)
+[ "$status" = "Status: accepted" ] || refuse "intent not Status: accepted"
+git ls-files --error-unmatch -- "$intent" >/dev/null 2>&1 || refuse "intent is untracked"
+git diff --quiet HEAD -- "$intent" || refuse "intent has uncommitted changes"
+echo "intent-guard: OK $intent"
