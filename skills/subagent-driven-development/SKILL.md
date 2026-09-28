@@ -156,8 +156,18 @@ a ledger file, not only in todos.
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
-against it. A plan with no reachable spec gets a ledger note saying so —
-rulings made without one are provisional.
+against it.
+
+Before dispatching Task 1 — and when resuming a ledger with no
+`gate-check: OK` line — run this skill's
+`bash scripts/gate-check PLAN_FILE` from the repo holding the plan. It passes
+only when the plan names a Spec and an Intent, the spec's intent passes
+intent-guard, and both the spec and the plan carry challenge rulings. On
+`gate-check: OK`, record that line in the ledger. On anything else —
+including a plan with no reachable spec — stop and ask your human partner;
+do not dispatch. An explicit waiver in chat is ledgered as
+`Ruling: gate-check waived — <reason given> — <cost if wrong>`, and rulings
+made without a spec are provisional.
 
 Before dispatching Task 1, scan the plan once for conflicts, writing down
 what you checked as you check it:

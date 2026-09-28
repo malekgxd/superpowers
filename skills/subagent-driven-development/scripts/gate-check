@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Refuse to start executing a plan unless its gates are on record: the plan names a spec and an
+# intent, the spec's intent passes intent-guard, and both spec and plan carry challenge rulings.
+# Usage: gate-check PLAN_FILE   (run from the repo that holds the plan)
+set -euo pipefail
+[ $# -eq 1 ] || { echo "usage: gate-check PLAN_FILE" >&2; exit 2; }
+plan=$1; [ -f "$plan" ] || { echo "gate-check: no plan at $plan" >&2; exit 2; }
+here=$(cd "$(dirname "$0")" && pwd)
+refuse() { echo "gate-check: REFUSE $1"; exit 1; }
+# Value of the first `**Key:**` / `Key:` line, without trailing whitespace.
+field() { sed -nE "s/^(\*\*)?$1:(\*\*)?[[:space:]]*//p" "$2" | head -1 | sed -E 's/[[:space:]]+$//'; }
+# The Spec line may trail section and commit notes: take the first path-looking token ending in .md.
+spec=$(field Spec "$plan" | tr -d '`*' | grep -oE '[^[:space:]]+\.md' | head -1 || true)
+[ -n "$spec" ] || refuse "plan has no Spec: line naming a .md file"
+[ -f "$spec" ] || refuse "spec file missing: $spec"
+[ -n "$(field Intent "$plan")" ] || refuse "plan has no Intent: line"
+guard=$("${BASH:-bash}" "$here/../../writing-plans/scripts/intent-guard" "$spec" 2>&1 || true)
+[[ "$guard" == "intent-guard: OK"* ]] || refuse "intent-guard on $spec: $guard"
+grep -qiE '^#+[[:space:]].*challenge rulings' "$spec" || refuse "spec has no Challenge rulings heading: $spec"
+grep -qiE '^#+[[:space:]].*challenge rulings' "$plan" || refuse "plan has no challenge rulings heading"
+echo "gate-check: OK"
