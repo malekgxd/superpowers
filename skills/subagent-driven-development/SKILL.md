@@ -164,7 +164,8 @@ neither a `gate-check: OK` nor a `gate-check waived` line — run
 `bash <this skill's base directory>/scripts/gate-check PLAN_FILE` from the
 repo holding the plan. It passes only when the plan names a Spec and the
 spec's Intent, that intent passes intent-guard, and both the spec and the
-plan carry challenge rulings (outside code fences). On `gate-check: OK`,
+plan carry a `Challenge:` line in their header (before the first `## `
+heading). On `gate-check: OK`,
 record that line in the ledger. On anything else —
 including a plan with no reachable spec — stop and ask your human partner;
 do not dispatch. An explicit waiver in chat is ledgered as

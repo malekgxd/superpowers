@@ -4,13 +4,17 @@
 set -euo pipefail
 [ $# -eq 1 ] || { echo "usage: intent-guard SPEC_FILE" >&2; exit 2; }
 spec=$1; [ -f "$spec" ] || { echo "intent-guard: no spec at $spec" >&2; exit 2; }
-here=$(cd "$(dirname "$0")" && pwd)
-source "$here/markdown-reader"
 refuse() { echo "intent-guard: REFUSE $1"; exit 1; }
 # $(...) silently drops NUL bytes, so refuse them on the byte stream before any parsing.
 nul_free() { [ "$(tr -d '\000' | wc -c)" -eq "$1" ]; }
 nul_free "$(wc -c < "$spec")" < "$spec" || refuse "spec contains NUL bytes"
-intent=$(intent_field "$spec")
+# Fields live in the header region: line 1 up to the first `## ` line, CR stripped.
+hdr=$(awk '{ gsub(/\r/, "") } /^## /{ exit } 1' "$spec")
+if grep -qE '```|~~~|<!--' <<<"$hdr"; then
+  refuse "spec header holds a code fence or comment; move it below the first ## heading"
+fi
+# Tolerate `**Intent:** path`, a backticked path and trailing whitespace.
+intent=$(sed -nE 's/^(\*\*)?Intent:(\*\*)?[[:space:]]*//p' <<<"$hdr" | head -1 | sed -E 's/[[:space:]]+$//; s/^`(.*)`$/\1/')
 [ -n "$intent" ] || refuse "spec has no Intent: line"
 [ -L "$intent" ] && refuse "intent is a symlink"
 [ -f "$intent" ] || refuse "intent file missing: $intent"

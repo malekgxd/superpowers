@@ -1,38 +1,63 @@
 #!/usr/bin/env bash
 # Refuse to start executing a plan unless its gates are on record: the plan names a spec and the
-# spec's intent, that intent passes intent-guard, and both spec and plan carry challenge rulings.
+# spec's intent, that intent passes intent-guard, and both spec and plan carry a Challenge: line.
+# Fields are read only from the header region (line 1 up to the first `## ` line) of the committed
+# HEAD blob; a code fence or `<!--` in that region refuses outright.
 # Usage: gate-check PLAN_FILE   (run from the repo that holds the plan)
 set -euo pipefail
 [ $# -eq 1 ] || { echo "usage: gate-check PLAN_FILE" >&2; exit 2; }
 plan=$1; [ -f "$plan" ] || { echo "gate-check: no plan at $plan" >&2; exit 2; }
 here=$(cd "$(dirname "$0")" && pwd)
-source "$here/../../writing-plans/scripts/markdown-reader"
 refuse() { echo "gate-check: REFUSE $1"; exit 1; }
+# Header region of the committed copy of $1, CR stripped.
+header() {
+  local oid blob
+  oid=$(git rev-parse --verify --quiet "HEAD:./$1" 2>/dev/null) || return 1
+  blob=$(git cat-file blob "$oid") || return 1
+  awk '{ gsub(/\r/, "") } /^## /{ exit } 1' <<<"$blob"
+}
+fenced() { grep -qE '```|~~~|<!--' <<<"$1"; }
 # One complete .md path after `**Key:**` / `Key:`: the first whitespace-delimited token, minus one
 # surrounding pair of ** or backticks. Glob characters or a non-.md ending refuse; never truncate.
 path_field() {
   local v
-  v=$(unfenced "$2" | sed -nE "s/^(\*\*)?$1:(\*\*)?[[:space:]]*//p" | head -1)
+  v=$(sed -nE "s/^(\*\*)?$1:(\*\*)?[[:space:]]*//p" <<<"$2" | head -1)
   v=${v%%[[:space:]]*}
   [[ "$v" == '**'?*'**' ]] && v=${v:2:${#v}-4}
   [[ "$v" == '`'?*'`' ]] && v=${v:1:${#v}-2}
   case "$v" in *[*?[]*) return 1 ;; ?*.md) printf '%s\n' "$v" ;; *) return 1 ;; esac
 }
-heading() { unfenced "$1" | grep -qiE '^ {0,3}#{1,6}[[:space:]].*challenge rulings'; }
+# Exactly one `Challenge: YYYY-MM-DD <verdict>` line (key may be bold, value may be backticked).
+challenge() {
+  local lines v
+  lines=$(grep -E '^(\*\*)?Challenge:' <<<"$2" || true)
+  [ -n "$lines" ] || refuse "$1 header has no Challenge: line"
+  [ "$(wc -l <<<"$lines")" -eq 1 ] || refuse "$1 header has more than one Challenge: line"
+  v=$(sed -E 's/^(\*\*)?Challenge:(\*\*)?[[:space:]]*//; s/[[:space:]]+$//; s/^`(.*)`$/\1/' <<<"$lines")
+  [[ "$v" =~ ^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])\ (holds|holds-with-conditions|broken-ruled)$ ]] \
+    || refuse "$1 Challenge: line is not 'YYYY-MM-DD holds|holds-with-conditions|broken-ruled': $v"
+}
 
-spec=$(path_field Spec "$plan") || refuse "plan has no Spec: line naming one .md path"
+plan_hdr=$(header "$plan") || refuse "plan not in HEAD: $plan"
+fenced "$plan_hdr" && refuse "plan header holds a code fence or comment; move it below the first ## heading"
+spec=$(path_field Spec "$plan_hdr") || refuse "plan has no Spec: line naming one .md path"
 [ -f "$spec" ] || refuse "spec file missing: $spec"
-intent=$(path_field Intent "$plan") || refuse "plan has no Intent: line naming one .md path"
+intent=$(path_field Intent "$plan_hdr") || refuse "plan has no Intent: line naming one .md path"
 [ -f "$intent" ] || refuse "plan Intent file missing: $intent"
+spec_hdr=$(header "$spec") || refuse "spec not in HEAD: $spec"
+fenced "$spec_hdr" && refuse "spec header holds a code fence or comment; move it below the first ## heading"
+spec_intent=$(path_field Intent "$spec_hdr") || refuse "spec has no Intent: line naming one .md path"
 guard=$("${BASH:-bash}" "$here/../../writing-plans/scripts/intent-guard" "$spec" 2>&1 || true)
 [[ "$guard" == "intent-guard: OK "* ]] || refuse "intent-guard on $spec: $guard"
-spec_intent=$(intent_field "$spec")
+# intent-guard reads the worktree spec; it must have checked the intent the committed spec names.
+[ "${guard#intent-guard: OK }" = "$spec_intent" ] \
+  || refuse "intent-guard checked ${guard#intent-guard: OK } but the committed spec names $spec_intent"
 plan_path=$(realpath -- "$intent") || refuse "cannot resolve intent path"
 [ -n "$plan_path" ] || refuse "cannot resolve intent path"
 spec_path=$(realpath -- "$spec_intent") || refuse "cannot resolve intent path"
 [ -n "$spec_path" ] || refuse "cannot resolve intent path"
 [ "$plan_path" = "$spec_path" ] \
   || refuse "plan Intent does not match the spec's Intent: $intent vs $spec_intent"
-heading "$spec" || refuse "spec has no Challenge rulings heading: $spec"
-heading "$plan" || refuse "plan has no challenge rulings heading"
+challenge spec "$spec_hdr"
+challenge plan "$plan_hdr"
 echo "gate-check: OK"

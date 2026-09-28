@@ -18,15 +18,17 @@ for f in subagent-driven-development executing-plans; do
 done
 
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
-# Fixture: committed accepted intent, spec with a challenge heading, plan with Spec/Intent and plan rulings.
+# Fixture: committed accepted intent; spec and plan whose header regions (before the first `## `)
+# carry Intent/Spec and a Challenge: line.
 fixture() {
   rm -rf "$T/r"; mkdir -p "$T/r/docs/intents" "$T/r/docs/specs" "$T/r/docs/plans"
   cd "$T/r" && git init -q && git config user.email t@t && git config user.name t
   printf '# Intent: demo\nAuthor: Dee. Status: accepted\n' > docs/intents/i.md
-  printf '# Spec\nIntent: docs/intents/i.md\n\n## 9. Challenge rulings\n- held\n' > docs/specs/s.md
-  printf '# Plan\n\n**Spec:** `docs/specs/s.md` §4 (commit abc1234)\n**Intent:** `docs/intents/i.md`\n\n## Plan challenge rulings\n- held\n' > docs/plans/p.md
+  printf '# Spec\nIntent: docs/intents/i.md\nChallenge: 2026-09-28 holds\n\n## 9. Challenge rulings\n- held\n' > docs/specs/s.md
+  printf '# Plan\n\n**Spec:** `docs/specs/s.md` §4 (commit abc1234)\n**Intent:** `docs/intents/i.md`\n**Challenge:** 2026-09-28 holds-with-conditions\n\n## Plan challenge rulings\n- held\n' > docs/plans/p.md
   git add -A && git commit -qm fixture
 }
+C() { git add -A && git commit -qm x; }
 run() { out=$(cd "$T/r" && "${BASH:-bash}" "$G" docs/plans/p.md 2>&1) && rc=0 || rc=$?; }
 expect() { # $1 label, $2 rc, $3 output substring
   run
@@ -35,56 +37,42 @@ expect() { # $1 label, $2 rc, $3 output substring
 
 if [ -x "$G" ]; then
   fixture; expect "complete fixture passes" 0 "gate-check: OK"
-  fixture; sed -i '/^\*\*Spec:/d' docs/plans/p.md; expect "plan without Spec line refused" 1 "gate-check: REFUSE plan has no Spec:"
-  fixture; sed -i 's/Challenge rulings/Notes/' docs/specs/s.md; git commit -qam x; expect "spec without challenge heading refused" 1 "gate-check: REFUSE spec has no Challenge rulings"
-  fixture; sed -i 's/Plan challenge rulings/Notes/' docs/plans/p.md; expect "plan without challenge heading refused" 1 "gate-check: REFUSE plan has no challenge rulings"
-  fixture; sed -i 's/Status: accepted/Status: draft/' docs/intents/i.md; git commit -qam x; expect "draft intent refused via intent-guard" 1 "gate-check: REFUSE intent-guard on docs/specs/s.md: intent-guard: REFUSE intent not Status: accepted"
-  fixture; sed -i '/^\*\*Intent:/d' docs/plans/p.md; expect "plan without Intent line refused" 1 "gate-check: REFUSE plan has no Intent:"
-  # Fences: headings and fields inside ``` or ~~~ blocks do not count.
-  fixture; sed -i 's/^## Plan challenge rulings$/```md\n## Plan challenge rulings\n```/' docs/plans/p.md; expect "plan heading only in a backtick fence refused" 1 "gate-check: REFUSE plan has no challenge rulings"
-  fixture; sed -i 's/^## 9. Challenge rulings$/~~~~\n## 9. Challenge rulings\n~~~\n~~~~/' docs/specs/s.md; git commit -qam x; expect "spec heading only in a tilde fence refused" 1 "gate-check: REFUSE spec has no Challenge rulings"
-  fixture; sed -i 's/^## Plan challenge rulings$/````text\n```\n## Plan challenge rulings\n```\n````/' docs/plans/p.md; expect "heading inside a nested 4-backtick fence refused" 1 "gate-check: REFUSE plan has no challenge rulings"
-  fixture; sed -i 's/^\*\*Spec:/```\n**Spec:/; s/^\*\*Intent:\(.*\)$/**Intent:\1\n```/' docs/plans/p.md; expect "Spec/Intent only inside a fence refused" 1 "gate-check: REFUSE plan has no Spec:"
-  # Container fences and HTML comments cannot supply fields or challenge headings.
-  for marker in '- ' '* ' '+ ' '1. ' '> ' '  > - '; do
-    for fence in '```' '~~~'; do
-      fixture; sed -i '/^## Plan challenge rulings/,$d' docs/plans/p.md
-      printf '%s%smd\n  ## Plan challenge rulings\n  %s\n' "$marker" "$fence" "$fence" >> docs/plans/p.md
-      expect "plan heading only in $marker$fence fence refused" 1 "gate-check: REFUSE plan has no challenge rulings"
-    done
-  done
-  fixture; sed -i 's/^## 9. Challenge rulings$/<!--\n## 9. Challenge rulings\n-->/' docs/specs/s.md; expect "spec heading only in an HTML comment refused" 1 "gate-check: REFUSE spec has no Challenge rulings"
-  fixture; sed -i 's/^## Plan challenge rulings$/<!--\n## Plan challenge rulings\n-->/' docs/plans/p.md; expect "plan heading only in an HTML comment refused" 1 "gate-check: REFUSE plan has no challenge rulings"
-  fixture; sed -i 's/^\*\*Spec:.*$/<!--\n&\n-->/' docs/plans/p.md; expect "Spec only in an HTML comment refused" 1 "gate-check: REFUSE plan has no Spec:"
-  fixture; sed -i 's/^\*\*Intent:.*$/<!--\n&\n-->/' docs/plans/p.md; expect "plan Intent only in an HTML comment refused" 1 "gate-check: REFUSE plan has no Intent:"
-  fixture; sed -i 's/^## Plan challenge rulings$/<!-- ## Plan challenge rulings -->/' docs/plans/p.md; expect "single-line commented heading refused" 1 "gate-check: REFUSE plan has no challenge rulings"
-  fixture; sed -i 's/^## Plan challenge rulings$/<!-- old -->## Plan challenge rulings<!-- note -->/' docs/plans/p.md; expect "visible heading beside comments accepted" 0 "gate-check: OK"
-  fixture
-  for doc in docs/specs/s.md docs/plans/p.md; do sed -i '1a ```md <!-- literal info text\nIntent: missing.md\n```' "$doc"; done
-  expect "comment opener in fence info cannot hide later fields or headings" 0 "gate-check: OK"
-  for wrapper in fence comment; do
-    if [ "$wrapper" = fence ]; then open='```md'; close='```'; else open='<!--'; close='-->'; fi
-    fixture; printf '# Spec\n%s\nIntent: docs/intents/i.md\n%s\n## Challenge rulings\n' "$open" "$close" > docs/specs/s.md
-    expect "spec Intent only in $wrapper refused" 1 "intent-guard: REFUSE spec has no Intent: line"
-    printf '# Intent: draft\nAuthor: Dee. Status: draft\n' > docs/intents/draft.md
-    printf 'Intent: docs/intents/draft.md\n' >> docs/specs/s.md; git add -A; git commit -qm draft
-    expect "hidden spec Intent in $wrapper cannot shadow draft Intent" 1 "intent-guard: REFUSE intent not Status: accepted"
-  done
-  # CRLF closes fences before real fields and headings in both documents.
-  fixture
-  for doc in docs/specs/s.md docs/plans/p.md; do sed -i '1a ```md\nexample\n```' "$doc"; sed -i 's/$/\r/' "$doc"; done
-  expect "CRLF plan and spec with headings after a code block accepted" 0 "gate-check: OK"
-  fixture; sed -i 's/^## Plan challenge rulings$/```md\n## Plan challenge rulings\n```/; s/$/\r/' docs/plans/p.md; expect "CRLF plan heading only inside a fence refused" 1 "gate-check: REFUSE plan has no challenge rulings"
-  fixture; sed -i 's/^## 9. Challenge rulings$/~~~\n## 9. Challenge rulings\n~~~/; s/$/\r/' docs/specs/s.md; expect "CRLF spec heading only inside a fence refused" 1 "gate-check: REFUSE spec has no Challenge rulings"
+  fixture; sed -i '/^\*\*Spec:/d' docs/plans/p.md; C; expect "plan without Spec line refused" 1 "gate-check: REFUSE plan has no Spec:"
+  fixture; sed -i 's/Status: accepted/Status: draft/' docs/intents/i.md; C; expect "draft intent refused via intent-guard" 1 "gate-check: REFUSE intent-guard on docs/specs/s.md: intent-guard: REFUSE intent not Status: accepted"
+  fixture; sed -i '/^\*\*Intent:/d' docs/plans/p.md; C; expect "plan without Intent line refused" 1 "gate-check: REFUSE plan has no Intent:"
+  # Challenge: exactly one `YYYY-MM-DD <verdict>` line in each header.
+  fixture; sed -i '/^\*\*Challenge:/d' docs/plans/p.md; C; expect "plan without Challenge line refused" 1 "gate-check: REFUSE plan header has no Challenge: line"
+  fixture; sed -i '/^Challenge:/d' docs/specs/s.md; C; expect "spec without Challenge line refused" 1 "gate-check: REFUSE spec header has no Challenge: line"
+  fixture; sed -i 's/2026-09-28 holds-with/2026-13-28 holds-with/' docs/plans/p.md; C; expect "Challenge with a bad date refused" 1 "gate-check: REFUSE plan Challenge: line is not"
+  fixture; sed -i 's/^Challenge: 2026-09-28 holds$/Challenge: 2026-09-28 broken/' docs/specs/s.md; C; expect "Challenge with a bad verdict refused" 1 "gate-check: REFUSE spec Challenge: line is not"
+  fixture; sed -i 's/^Challenge: 2026-09-28 holds$/Challenge: 2026-09-28/' docs/specs/s.md; C; expect "Challenge without a verdict refused" 1 "gate-check: REFUSE spec Challenge: line is not"
+  fixture; sed -i 's/^\*\*Challenge:.*$/&\nChallenge: 2026-09-29 holds/' docs/plans/p.md; C; expect "two plan Challenge lines refused" 1 "gate-check: REFUSE plan header has more than one Challenge: line"
+  fixture; sed -i 's/^Challenge: .*$/Challenge: `2026-09-28 broken-ruled`   /' docs/specs/s.md; C; expect "backticked broken-ruled Challenge accepted" 0 "gate-check: OK"
+  # Header region only: a fence or comment in it refuses; content after the first `## ` is ignored.
+  fixture; sed -i 's/^# Plan$/&\n```md\nexample\n```/' docs/plans/p.md; C; expect "fence in plan header refused" 1 "gate-check: REFUSE plan header holds a code fence or comment"
+  fixture; sed -i 's/^# Spec$/&\n<!-- note -->/' docs/specs/s.md; C; expect "comment in spec header refused" 1 "gate-check: REFUSE spec header holds a code fence or comment"
+  fixture; sed -i 's/^# Spec$/&\nSee ~~~ here/' docs/specs/s.md; C; expect "tilde run in spec header refused" 1 "gate-check: REFUSE spec header holds a code fence or comment"
+  fixture; printf '\n## Examples\n```md\nChallenge: 2026-09-28 holds\n<!-- x -->\n```\n' >> docs/plans/p.md; C; expect "fenced example below the header ignored" 0 "gate-check: OK"
+  fixture; sed -i '/^\*\*Challenge:/d' docs/plans/p.md; printf '\n## Examples\n```md\n**Challenge:** 2026-09-28 holds\n```\nChallenge: 2026-09-28 holds\n' >> docs/plans/p.md; C; expect "Challenge only below the header refused" 1 "gate-check: REFUSE plan header has no Challenge: line"
+  fixture; sed -i '/^\*\*Spec:/d' docs/plans/p.md; printf '\n## Notes\nSpec: docs/specs/s.md\n' >> docs/plans/p.md; C; expect "Spec only below the header refused" 1 "gate-check: REFUSE plan has no Spec:"
+  fixture; sed -i '/^##/d' docs/plans/p.md; printf '```\nlate fence\n```\n' >> docs/plans/p.md; C; expect "plan with no ## heading is all header: late fence refused" 1 "gate-check: REFUSE plan header holds a code fence or comment"
+  # Plan and spec are read from HEAD: uncommitted edits are not honoured.
+  fixture; sed -i '/^\*\*Challenge:/d' docs/plans/p.md; C; sed -i 's/^\*\*Intent:.*$/&\n**Challenge:** 2026-09-28 holds/' docs/plans/p.md; expect "uncommitted plan Challenge not honoured" 1 "gate-check: REFUSE plan header has no Challenge: line"
+  fixture; sed -i '/^Challenge:/d' docs/specs/s.md; C; sed -i 's/^Intent:.*$/&\nChallenge: 2026-09-28 holds/' docs/specs/s.md; expect "uncommitted spec Challenge not honoured" 1 "gate-check: REFUSE spec header has no Challenge: line"
+  fixture; git rm -q --cached docs/plans/p.md; git commit -qm untrack; expect "untracked plan refused" 1 "gate-check: REFUSE plan not in HEAD"
+  fixture; git rm -q --cached docs/specs/s.md; git commit -qm untrack; expect "untracked spec refused" 1 "gate-check: REFUSE spec not in HEAD"
+  fixture; printf '# Intent: other\nAuthor: Dee. Status: accepted\n' > docs/intents/j.md; C; sed -i 's#^Intent:.*#Intent: docs/intents/j.md#' docs/specs/s.md; expect "worktree spec Intent differing from HEAD refused" 1 "gate-check: REFUSE intent-guard checked docs/intents/j.md but the committed spec names docs/intents/i.md"
+  # CRLF is normalized in header lines.
+  fixture; sed -i 's/$/\r/' docs/specs/s.md docs/plans/p.md; C; expect "CRLF plan and spec accepted" 0 "gate-check: OK"
   # Full-path parse: never truncate or glob a Spec path.
-  fixture; sed -i 's#`docs/specs/s.md`#docs/specs/s.md.disabled#' docs/plans/p.md; expect "Spec s.md.disabled refused although s.md exists" 1 "gate-check: REFUSE plan has no Spec:"
-  fixture; sed -i 's#`docs/specs/s.md`#docs/specs/s*.md#' docs/plans/p.md; expect "globbed Spec path refused" 1 "gate-check: REFUSE plan has no Spec:"
-  fixture; sed -i 's#^\*\*Spec:.*#Spec: docs/specs/s.md#' docs/plans/p.md; expect "bare Spec: line accepted" 0 "gate-check: OK"
+  fixture; sed -i 's#`docs/specs/s.md`#docs/specs/s.md.disabled#' docs/plans/p.md; C; expect "Spec s.md.disabled refused although s.md exists" 1 "gate-check: REFUSE plan has no Spec:"
+  fixture; sed -i 's#`docs/specs/s.md`#docs/specs/s*.md#' docs/plans/p.md; C; expect "globbed Spec path refused" 1 "gate-check: REFUSE plan has no Spec:"
+  fixture; sed -i 's#^\*\*Spec:.*#Spec: docs/specs/s.md#' docs/plans/p.md; C; expect "bare Spec: line accepted" 0 "gate-check: OK"
   # Plan Intent: present, existing, and the spec's intent.
-  fixture; sed -i 's#^\*\*Intent:.*#**Intent:** ``#' docs/plans/p.md; expect "empty plan Intent refused" 1 "gate-check: REFUSE plan has no Intent:"
-  fixture; sed -i 's#docs/intents/i.md`$#docs/intents/nope.md`#' docs/plans/p.md; expect "nonexistent plan Intent refused" 1 "gate-check: REFUSE plan Intent file missing"
-  fixture; printf '# Intent: other\nAuthor: Dee. Status: accepted\n' > docs/intents/j.md; git add -A; git commit -qm j; sed -i 's#docs/intents/i.md`$#docs/intents/j.md`#' docs/plans/p.md; expect "mismatched plan Intent refused" 1 "gate-check: REFUSE plan Intent does not match the spec's Intent"
-  fixture; sed -i 's#`docs/intents/i.md`$#./docs/intents/../intents/i.md#' docs/plans/p.md; expect "plan Intent spelled differently but same file accepted" 0 "gate-check: OK"
+  fixture; sed -i 's#^\*\*Intent:.*#**Intent:** ``#' docs/plans/p.md; C; expect "empty plan Intent refused" 1 "gate-check: REFUSE plan has no Intent:"
+  fixture; sed -i 's#docs/intents/i.md`$#docs/intents/nope.md`#' docs/plans/p.md; C; expect "nonexistent plan Intent refused" 1 "gate-check: REFUSE plan Intent file missing"
+  fixture; printf '# Intent: other\nAuthor: Dee. Status: accepted\n' > docs/intents/j.md; sed -i 's#docs/intents/i.md`$#docs/intents/j.md`#' docs/plans/p.md; C; expect "mismatched plan Intent refused" 1 "gate-check: REFUSE plan Intent does not match the spec's Intent"
+  fixture; sed -i 's#`docs/intents/i.md`$#./docs/intents/../intents/i.md#' docs/plans/p.md; C; expect "plan Intent spelled differently but same file accepted" 0 "gate-check: OK"
   # Each realpath call must succeed and return a nonempty path before comparison.
   mkdir -p "$T/bin"
   for mode in fail empty fail-with-output plan-fail spec-fail plan-empty spec-empty; do
@@ -99,7 +87,7 @@ esac
 printf '/same/path\n'
 STUB
     chmod +x "$T/bin/realpath"
-    sed -i 's#`docs/intents/i.md`$#./docs/intents/i.md#' docs/plans/p.md
+    sed -i 's#`docs/intents/i.md`$#./docs/intents/i.md#' docs/plans/p.md; C
     PATH="$T/bin:$PATH" REALPATH_MODE="$mode" expect "realpath $mode refused" 1 "gate-check: REFUSE cannot resolve intent path"
   done
   fixture; rc=0; (cd "$T/r" && "${BASH:-bash}" "$G" >/dev/null 2>&1) || rc=$?; [ "$rc" -eq 2 ] && ok "no argument is a usage error" || bad "no argument: rc=$rc"

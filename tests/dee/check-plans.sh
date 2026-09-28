@@ -7,7 +7,8 @@ grep -qF -- '**Wide refactors are the exception.**' "$F" && grep -qF -- 'expandâ
 grep -qF -- '## Intent Guard' "$F" && grep -qF -- 'scripts/intent-guard' "$F" && grep -qF -- 'from the repo that holds the spec' "$F" && ok "SKILL runs the intent guard" || bad "SKILL lacks the intent guard"
 grep -qF -- '**Intent:**' "$F" && ok "plan header carries Intent" || bad "plan header lacks Intent"
 grep -qF -- 'challenge the committed plan' "$F" && ok "handoff challenges the plan" || bad "handoff lacks the plan challenge"
-grep -qF -- 'record its rulings in the plan under a `## Plan challenge rulings` heading' "$F" && ok "plan rulings go under the gate-check heading" || bad "plan rulings heading unnamed"
+grep -qF -- 'add `Challenge: YYYY-MM-DD <verdict>` to the plan header' "$F" && ok "plan challenge recorded in the header" || bad "plan Challenge: header line unnamed"
+grep -qF -- '**Challenge:**' "$F" && ok "plan header template carries Challenge" || bad "plan header template lacks Challenge"
 grep -qF -- 'I recommend Subagent-driven' "$F" && ok "handoff recommends Subagent-driven" || bad "handoff does not recommend Subagent-driven"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 mk() { # mk NAME INTENT_STATUS  -> repo with committed spec+intent
@@ -53,33 +54,15 @@ spec() { mk "$1" accepted; printf '# Spec\n%s\n' "$2" > "$T/$1/docs/superpowers/
 spec bold '**Intent:** docs/superpowers/intents/i.md'; expect bold 0 'intent-guard: OK'
 spec ticked 'Intent: `docs/superpowers/intents/i.md`'; expect ticked 0 'intent-guard: OK'
 spec trailing 'Intent: docs/superpowers/intents/i.md   '; expect trailing 0 'intent-guard: OK'
-# The same visible Intent reader is used by intent-guard and gate-check.
-for wrapper in fence list-fence quote-fence comment inline-comment; do
-  case "$wrapper" in
-    fence) open='```md'; close='```' ;;
-    list-fence) open='- ~~~md'; close='  ~~~' ;;
-    quote-fence) open='> ```md'; close='> ```' ;;
-    comment) open='<!--'; close='-->' ;;
-    inline-comment) open='<!-- Intent: ignored.md -->'; close='' ;;
-  esac
-  mk "$wrapper" accepted
-  if [ "$wrapper" = inline-comment ]; then
-    printf '# Spec\n<!-- Intent: docs/superpowers/intents/i.md -->\n' > "$T/$wrapper/docs/superpowers/specs/s.md"
-  else
-    printf '# Spec\n%s\nIntent: docs/superpowers/intents/i.md\n%s\n' "$open" "$close" > "$T/$wrapper/docs/superpowers/specs/s.md"
-  fi
-  expect "$wrapper" 1 'spec has no Intent: line'
-  printf '# Intent: draft\nAuthor: t. Status: draft\n' > "$T/$wrapper/docs/superpowers/intents/draft.md"
-  printf 'Intent: docs/superpowers/intents/draft.md\n' >> "$T/$wrapper/docs/superpowers/specs/s.md"
-  git -C "$T/$wrapper" add -A; C "$wrapper" draft
-  expect "$wrapper" 1 'intent not Status: accepted'
-done
-mk crlf accepted; printf '# Spec\r\n```md\r\nIntent: missing.md\r\n```\r\n**Intent:** `docs/superpowers/intents/i.md`\r\n' > "$T/crlf/docs/superpowers/specs/s.md"
-expect crlf 0 'intent-guard: OK'
-mk crlf-fenced accepted; printf '# Spec\r\n~~~md\r\nIntent: docs/superpowers/intents/i.md\r\n~~~\r\n' > "$T/crlf-fenced/docs/superpowers/specs/s.md"
-expect crlf-fenced 1 'spec has no Intent: line'
-mk fence-info accepted; printf '# Spec\n```md <!-- literal info text\nIntent: missing.md\n```\nIntent: docs/superpowers/intents/i.md\n' > "$T/fence-info/docs/superpowers/specs/s.md"
-expect fence-info 0 'intent-guard: OK'
+# Intent is read from the header region only (line 1 up to the first `## `), CR stripped;
+# a fence or comment in that region refuses, anything below it is ignored.
+hdr() { mk "$1" accepted; printf "$2" > "$T/$1/docs/superpowers/specs/s.md"; C "$1" s; }
+hdr crlf '# Spec\r\n**Intent:** `docs/superpowers/intents/i.md`\r\n\r\n## Notes\r\n'; expect crlf 0 'intent-guard: OK'
+hdr hdr-fence '# Spec\n```md\nx\n```\nIntent: docs/superpowers/intents/i.md\n'; expect hdr-fence 1 'spec header holds a code fence or comment'
+hdr hdr-comment '# Spec\nIntent: docs/superpowers/intents/i.md <!-- x -->\n'; expect hdr-comment 1 'spec header holds a code fence or comment'
+hdr below-fence '# Spec\nIntent: docs/superpowers/intents/i.md\n## Examples\n```md\nIntent: missing.md\n<!--\n```\n'; expect below-fence 0 'intent-guard: OK'
+hdr below-only '# Spec\n## Notes\nIntent: docs/superpowers/intents/i.md\n'; expect below-only 1 'spec has no Intent: line'
+hdr no-h2-fence '# Spec\nIntent: docs/superpowers/intents/i.md\n\nBody.\n~~~\ncode\n~~~\n'; expect no-h2-fence 1 'spec header holds a code fence or comment'
 mk nulhead accepted; printf '# In\000tent: x\nAuthor: t. Status: accepted\n' > "$T/nulhead/docs/superpowers/intents/i.md"; C nulhead n
 expect nulhead 1 'intent file contains NUL bytes'
 mk nulstatus accepted; printf '# Intent: x\nAuthor: t. Status: ac\000cepted\n' > "$T/nulstatus/docs/superpowers/intents/i.md"; C nulstatus n
