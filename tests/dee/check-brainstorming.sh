@@ -23,6 +23,7 @@ gone '2. **Write the intent** — before any question, approach, or design'
 need 'On the architectural path the intent file is this write-back'
 need 'accepts and commits the intent'
 need 'Written-spec approval only permits `challenge` and then writing-plans'
+need 'record the rulings in the spec under a `## Challenge rulings` heading'
 gone 'written-spec approval only permits invoking writing-plans'
 [ "$fail" -eq 0 ] && echo "brainstorming: OK"
 exit $fail

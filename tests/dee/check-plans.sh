@@ -7,6 +7,7 @@ grep -qF -- '**Wide refactors are the exception.**' "$F" && grep -qF -- 'expandâ
 grep -qF -- '## Intent Guard' "$F" && grep -qF -- 'scripts/intent-guard' "$F" && grep -qF -- 'from the repo that holds the spec' "$F" && ok "SKILL runs the intent guard" || bad "SKILL lacks the intent guard"
 grep -qF -- '**Intent:**' "$F" && ok "plan header carries Intent" || bad "plan header lacks Intent"
 grep -qF -- 'challenge the committed plan' "$F" && ok "handoff challenges the plan" || bad "handoff lacks the plan challenge"
+grep -qF -- 'record its rulings in the plan under a `## Plan challenge rulings` heading' "$F" && ok "plan rulings go under the gate-check heading" || bad "plan rulings heading unnamed"
 grep -qF -- 'I recommend Subagent-driven' "$F" && ok "handoff recommends Subagent-driven" || bad "handoff does not recommend Subagent-driven"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 mk() { # mk NAME INTENT_STATUS  -> repo with committed spec+intent

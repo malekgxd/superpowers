@@ -28,7 +28,8 @@ Four things stop you, and only these: an irreversible or destructive
 operation; a security-sensitive action; a side effect outside this worktree
 that norms say you ask about first (a merge, a push to a shared branch, a
 publish); and a plan so broken that every path forward is a guess. For those,
-stop and ask.
+stop and ask. Before Task 1 one more thing stops you: a gate-check refusal
+(see Setup); only your human partner can waive it.
 
 ## When to Use
 
@@ -158,12 +159,13 @@ todo per task. If the plan names a Spec, read that too: the spec is the
 authority the plan argues from, and conflicts inside the plan resolve
 against it.
 
-Before dispatching Task 1 — and when resuming a ledger with no
-`gate-check: OK` line — run this skill's
-`bash scripts/gate-check PLAN_FILE` from the repo holding the plan. It passes
-only when the plan names a Spec and an Intent, the spec's intent passes
-intent-guard, and both the spec and the plan carry challenge rulings. On
-`gate-check: OK`, record that line in the ledger. On anything else —
+Before dispatching Task 1 — and when resuming a ledger with
+neither a `gate-check: OK` nor a `gate-check waived` line — run
+`bash <this skill's base directory>/scripts/gate-check PLAN_FILE` from the
+repo holding the plan. It passes only when the plan names a Spec and the
+spec's Intent, that intent passes intent-guard, and both the spec and the
+plan carry challenge rulings (outside code fences). On `gate-check: OK`,
+record that line in the ledger. On anything else —
 including a plan with no reachable spec — stop and ask your human partner;
 do not dispatch. An explicit waiver in chat is ledgered as
 `Ruling: gate-check waived — <reason given> — <cost if wrong>`, and rulings

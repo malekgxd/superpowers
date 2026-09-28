@@ -1,21 +1,43 @@
 #!/usr/bin/env bash
-# Refuse to start executing a plan unless its gates are on record: the plan names a spec and an
-# intent, the spec's intent passes intent-guard, and both spec and plan carry challenge rulings.
+# Refuse to start executing a plan unless its gates are on record: the plan names a spec and the
+# spec's intent, that intent passes intent-guard, and both spec and plan carry challenge rulings.
 # Usage: gate-check PLAN_FILE   (run from the repo that holds the plan)
 set -euo pipefail
 [ $# -eq 1 ] || { echo "usage: gate-check PLAN_FILE" >&2; exit 2; }
 plan=$1; [ -f "$plan" ] || { echo "gate-check: no plan at $plan" >&2; exit 2; }
 here=$(cd "$(dirname "$0")" && pwd)
 refuse() { echo "gate-check: REFUSE $1"; exit 1; }
-# Value of the first `**Key:**` / `Key:` line, without trailing whitespace.
-field() { sed -nE "s/^(\*\*)?$1:(\*\*)?[[:space:]]*//p" "$2" | head -1 | sed -E 's/[[:space:]]+$//'; }
-# The Spec line may trail section and commit notes: take the first path-looking token ending in .md.
-spec=$(field Spec "$plan" | tr -d '`*' | grep -oE '[^[:space:]]+\.md' | head -1 || true)
-[ -n "$spec" ] || refuse "plan has no Spec: line naming a .md file"
+# Markdown outside fenced code blocks: a ``` or ~~~ run of 3+ (up to 3 spaces indent) opens a
+# fence, a bare run of the same char at least as long closes it, an unclosed fence runs to EOF.
+unfenced() {
+  awk 'function run(s, c,  n) { n = 0; while (substr(s, n + 1, 1) == c) n++; return n }
+  { t = $0; k = 0; while (k < 3 && substr(t, 1, 1) == " ") { t = substr(t, 2); k++ }
+    c = substr(t, 1, 1); n = (c == "`" || c == "~") ? run(t, c) : 0 }
+  f != "" { if (c == f && n >= len && substr(t, n + 1) ~ /^[ \t]*$/) f = ""; next }
+  n >= 3 && !(c == "`" && index(substr(t, n + 1), "`")) { f = c; len = n; next }
+  { print }' "$1"
+}
+# One complete .md path after `**Key:**` / `Key:`: the first whitespace-delimited token, minus one
+# surrounding pair of ** or backticks. Glob characters or a non-.md ending refuse; never truncate.
+path_field() {
+  local v
+  v=$(unfenced "$2" | sed -nE "s/^(\*\*)?$1:(\*\*)?[[:space:]]*//p" | head -1)
+  v=${v%%[[:space:]]*}
+  [[ "$v" == '**'?*'**' ]] && v=${v:2:${#v}-4}
+  [[ "$v" == '`'?*'`' ]] && v=${v:1:${#v}-2}
+  case "$v" in *[*?[]*) return 1 ;; ?*.md) printf '%s\n' "$v" ;; *) return 1 ;; esac
+}
+heading() { unfenced "$1" | grep -qiE '^ {0,3}#{1,6}[[:space:]].*challenge rulings'; }
+
+spec=$(path_field Spec "$plan") || refuse "plan has no Spec: line naming one .md path"
 [ -f "$spec" ] || refuse "spec file missing: $spec"
-[ -n "$(field Intent "$plan")" ] || refuse "plan has no Intent: line"
+intent=$(path_field Intent "$plan") || refuse "plan has no Intent: line naming one .md path"
+[ -f "$intent" ] || refuse "plan Intent file missing: $intent"
 guard=$("${BASH:-bash}" "$here/../../writing-plans/scripts/intent-guard" "$spec" 2>&1 || true)
-[[ "$guard" == "intent-guard: OK"* ]] || refuse "intent-guard on $spec: $guard"
-grep -qiE '^#+[[:space:]].*challenge rulings' "$spec" || refuse "spec has no Challenge rulings heading: $spec"
-grep -qiE '^#+[[:space:]].*challenge rulings' "$plan" || refuse "plan has no challenge rulings heading"
+[[ "$guard" == "intent-guard: OK "* ]] || refuse "intent-guard on $spec: $guard"
+spec_intent=${guard#intent-guard: OK }
+[ "$(realpath -- "$intent")" = "$(realpath -- "$spec_intent")" ] \
+  || refuse "plan Intent does not match the spec's Intent: $intent vs $spec_intent"
+heading "$spec" || refuse "spec has no Challenge rulings heading: $spec"
+heading "$plan" || refuse "plan has no challenge rulings heading"
 echo "gate-check: OK"

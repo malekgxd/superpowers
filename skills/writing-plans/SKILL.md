@@ -202,7 +202,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan and record its rulings in the plan; the handoff waits for that.
+Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan and record its rulings in the plan under a `## Plan challenge rulings` heading; the handoff waits for that.
 
 After saving and self-reviewing the plan, link it for your human partner
 to read. If they have already explicitly supplied an execution method, ask
