@@ -53,6 +53,33 @@ spec() { mk "$1" accepted; printf '# Spec\n%s\n' "$2" > "$T/$1/docs/superpowers/
 spec bold '**Intent:** docs/superpowers/intents/i.md'; expect bold 0 'intent-guard: OK'
 spec ticked 'Intent: `docs/superpowers/intents/i.md`'; expect ticked 0 'intent-guard: OK'
 spec trailing 'Intent: docs/superpowers/intents/i.md   '; expect trailing 0 'intent-guard: OK'
+# The same visible Intent reader is used by intent-guard and gate-check.
+for wrapper in fence list-fence quote-fence comment inline-comment; do
+  case "$wrapper" in
+    fence) open='```md'; close='```' ;;
+    list-fence) open='- ~~~md'; close='  ~~~' ;;
+    quote-fence) open='> ```md'; close='> ```' ;;
+    comment) open='<!--'; close='-->' ;;
+    inline-comment) open='<!-- Intent: ignored.md -->'; close='' ;;
+  esac
+  mk "$wrapper" accepted
+  if [ "$wrapper" = inline-comment ]; then
+    printf '# Spec\n<!-- Intent: docs/superpowers/intents/i.md -->\n' > "$T/$wrapper/docs/superpowers/specs/s.md"
+  else
+    printf '# Spec\n%s\nIntent: docs/superpowers/intents/i.md\n%s\n' "$open" "$close" > "$T/$wrapper/docs/superpowers/specs/s.md"
+  fi
+  expect "$wrapper" 1 'spec has no Intent: line'
+  printf '# Intent: draft\nAuthor: t. Status: draft\n' > "$T/$wrapper/docs/superpowers/intents/draft.md"
+  printf 'Intent: docs/superpowers/intents/draft.md\n' >> "$T/$wrapper/docs/superpowers/specs/s.md"
+  git -C "$T/$wrapper" add -A; C "$wrapper" draft
+  expect "$wrapper" 1 'intent not Status: accepted'
+done
+mk crlf accepted; printf '# Spec\r\n```md\r\nIntent: missing.md\r\n```\r\n**Intent:** `docs/superpowers/intents/i.md`\r\n' > "$T/crlf/docs/superpowers/specs/s.md"
+expect crlf 0 'intent-guard: OK'
+mk crlf-fenced accepted; printf '# Spec\r\n~~~md\r\nIntent: docs/superpowers/intents/i.md\r\n~~~\r\n' > "$T/crlf-fenced/docs/superpowers/specs/s.md"
+expect crlf-fenced 1 'spec has no Intent: line'
+mk fence-info accepted; printf '# Spec\n```md <!-- literal info text\nIntent: missing.md\n```\nIntent: docs/superpowers/intents/i.md\n' > "$T/fence-info/docs/superpowers/specs/s.md"
+expect fence-info 0 'intent-guard: OK'
 mk nulhead accepted; printf '# In\000tent: x\nAuthor: t. Status: accepted\n' > "$T/nulhead/docs/superpowers/intents/i.md"; C nulhead n
 expect nulhead 1 'intent file contains NUL bytes'
 mk nulstatus accepted; printf '# Intent: x\nAuthor: t. Status: ac\000cepted\n' > "$T/nulstatus/docs/superpowers/intents/i.md"; C nulstatus n
