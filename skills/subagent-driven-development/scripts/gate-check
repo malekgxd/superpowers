@@ -13,8 +13,8 @@ refuse() { echo "gate-check: REFUSE $1"; exit 1; }
 region() { awk '{ gsub(/\r/, "") } /^## /{ exit } 1'; }
 # $(...) silently drops NUL bytes, so refuse them on the byte stream before any capture.
 nul_free() { [ "$(tr -d '\000' | wc -c)" -eq "$1" ]; }
-# load LABEL PATH: set hdr to the header region of PATH's committed blob, CR stripped. The blob must
-# be NUL-free and the working-tree header must match it, so executors read what the gate checked.
+# load LABEL PATH: set hdr to the header region of PATH's committed blob, CR stripped. The blob and
+# working-tree file must be NUL-free, and their headers must match so executors read what the gate checked.
 load() {
   local ref oid blob top wt
   if [[ "$2" == /* ]]; then
@@ -28,6 +28,7 @@ load() {
   git cat-file blob "$oid" | nul_free "$(git cat-file -s "$oid")" || refuse "$1 contains NUL bytes: $2"
   blob=$(git cat-file blob "$oid") || refuse "cannot read $1 from HEAD: $2"
   hdr=$(region <<<"$blob")
+  nul_free "$(wc -c < "$2")" < "$2" || refuse "$1 contains NUL bytes: $2"
   wt=$(region < "$2")
   [ "$wt" = "$hdr" ] || refuse "$1 header differs from the committed version: $2"
 }

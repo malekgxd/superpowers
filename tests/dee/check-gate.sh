@@ -68,6 +68,11 @@ if [ -x "$G" ]; then
   fixture; sed -i 's/^# Plan$/# Plan, edited/' docs/plans/p.md; expect "working-tree plan header edited refused" 1 "gate-check: REFUSE plan header differs from the committed version"
   fixture; printf -- '- new step\n' >> docs/plans/p.md; expect "working-tree plan body edit accepted" 0 "gate-check: OK"
   fixture; sed -i 's/$/\r/' docs/plans/p.md; expect "working-tree CRLF-only change accepted" 0 "gate-check: OK"
+  # Working-tree files must also refuse NUL bytes before capturing their headers.
+  fixture; sed -i 's/^\*\*Challenge:/**Chal\x00lenge:/' docs/plans/p.md; expect "working-tree NUL inside the plan Challenge key refused" 1 "gate-check: REFUSE plan contains NUL bytes"
+  fixture; sed -i 's/holds-with-conditions/hol\x00ds-with-conditions/' docs/plans/p.md; expect "working-tree NUL inside the plan verdict refused" 1 "gate-check: REFUSE plan contains NUL bytes"
+  fixture; sed -i 's/^Challenge:/Chal\x00lenge:/' docs/specs/s.md; expect "working-tree NUL inside the spec Challenge key refused" 1 "gate-check: REFUSE spec contains NUL bytes"
+  fixture; sed -i 's/^Challenge: 2026-09-28 holds$/Challenge: 2026-09-28 hol\x00ds/' docs/specs/s.md; expect "working-tree NUL inside the spec verdict refused" 1 "gate-check: REFUSE spec contains NUL bytes"
   # Committed blobs with NUL bytes refuse before any capture could strip them.
   fixture; sed -i 's/^\*\*Challenge:/**Chal\x00lenge:/' docs/plans/p.md; C; expect "NUL inside the plan Challenge key refused" 1 "gate-check: REFUSE plan contains NUL bytes"
   fixture; sed -i 's/^Challenge: 2026-09-28 holds$/Challenge: 2026-09-28 hol\x00ds/' docs/specs/s.md; C; expect "NUL inside the spec verdict refused" 1 "gate-check: REFUSE spec contains NUL bytes"
