@@ -16,7 +16,8 @@
 # predates the marker scheme and is adopted for the current plan so in-flight
 # workspaces keep resolving — which means the first collision on such a
 # legacy workspace adopts instead of detecting; acceptable, marker-less
-# workspaces age out as plans finish.
+# workspaces age out as plans finish. Before any candidate is tried, an
+# existing workspace whose marker names this plan is returned as-is.
 #
 # The workspace lives in the working tree (not under .git/) because Claude Code
 # treats .git/ as a protected path and denies agent writes there — which blocks
@@ -67,6 +68,15 @@ owns() {
   fi
 }
 
+# A workspace this plan already owns wins over any candidate: once another plan's
+# workspace is archived, its freed slug must not be claimed ahead of ours.
+dir=
+for m in "$base"/*/plan-path; do
+  [ -f "$m" ] && [ "$(dirname "$m")" != "$base/_archive" ] || continue
+  if [ "$(cat "$m")" = "$plan_id" ]; then dir=$(dirname "$m"); break; fi
+done
+
+if [ -z "$dir" ]; then
 dir="$base/$slug"
 if ! owns "$dir"; then
   parent=$(basename "$plan_dir")
@@ -76,6 +86,7 @@ if ! owns "$dir"; then
     while ! owns "$base/$slug-$parent-$n"; do n=$((n + 1)); done
     dir="$base/$slug-$parent-$n"
   fi
+fi
 fi
 
 printf '*\n' > "$base/.gitignore"

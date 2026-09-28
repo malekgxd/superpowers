@@ -43,6 +43,22 @@ if [ -x "$D/scripts/sdd-archive" ]; then
   [ "$rc" -eq 2 ] && [ -f "$ws/plan-path" ] && [ -f "$ws/task-1-brief.md" ] && ok "ledgerless nonempty workspace kept with its marker" || bad "ledgerless nonempty workspace: rc=$rc, marker or brief removed"
 fi
 
+# Collision: once alpha's `plan` workspace is archived, beta must still resolve to its own `plan-beta`.
+if [ -x "$D/scripts/sdd-archive" ]; then
+  C=$(mktemp -d); trap 'rm -rf "${T:-}" "$C"' EXIT
+  (cd "$C" && git init -q && mkdir -p docs/alpha docs/beta && echo "# a" > docs/alpha/plan.md && echo "# b" > docs/beta/plan.md)
+  wa=$(cd "$C" && "$D/scripts/sdd-workspace" docs/alpha/plan.md)
+  wb=$(cd "$C" && "$D/scripts/sdd-workspace" docs/beta/plan.md)
+  [ "$wa" = "$C/.superpowers/sdd/plan" ] && [ "$wb" = "$C/.superpowers/sdd/plan-beta" ] && ok "same-name plans get plan and plan-beta" || bad "collision slugs: $wa $wb"
+  echo '# SDD ledger — plan: docs/beta/plan.md' > "$wb/progress.md"
+  echo '# SDD ledger — plan: docs/alpha/plan.md' > "$wa/progress.md"
+  (cd "$C" && "$D/scripts/sdd-archive" docs/alpha/plan.md >/dev/null)
+  wb2=$(cd "$C" && "$D/scripts/sdd-workspace" docs/beta/plan.md)
+  [ "$wb2" = "$wb" ] && [ -f "$wb2/progress.md" ] && ok "beta keeps its owned workspace after alpha is archived" || bad "beta re-resolved to $wb2 (owned: $wb)"
+  db=$(cd "$C" && "$D/scripts/sdd-archive" docs/beta/plan.md 2>/dev/null || true)
+  [ -n "$db" ] && [ -f "$db/progress.md" ] && grep -q 'docs/beta/plan.md' "$db/progress.md" && [ ! -e "$wb" ] && ok "archiving beta moves beta's ledger" || bad "archiving beta did not move its ledger (dest=$db)"
+fi
+
 E="$(cd "$D/../executing-plans" && pwd)/SKILL.md"
 grep -qiF -- "delete this plan's workspace" "$E" && bad "executing-plans still deletes the workspace" || ok "executing-plans archives the workspace"
 grep -qF -- 'sdd-archive PLAN_FILE' "$E" && ok "executing-plans finishes with sdd-archive" || bad "executing-plans never calls sdd-archive"
