@@ -24,6 +24,7 @@ need 'On the architectural path the intent file is this write-back'
 need 'accepts and commits the intent'
 need 'Written-spec approval only permits `challenge` and then writing-plans'
 need 'record the rulings in the spec under a `## Challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>`'
+need '"holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded)'
 gone 'written-spec approval only permits invoking writing-plans'
 [ "$fail" -eq 0 ] && echo "brainstorming: OK"
 exit $fail

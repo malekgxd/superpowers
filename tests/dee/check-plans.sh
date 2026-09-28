@@ -8,6 +8,7 @@ grep -qF -- '## Intent Guard' "$F" && grep -qF -- 'scripts/intent-guard' "$F" &&
 grep -qF -- '**Intent:**' "$F" && ok "plan header carries Intent" || bad "plan header lacks Intent"
 grep -qF -- 'challenge the committed plan' "$F" && ok "handoff challenges the plan" || bad "handoff lacks the plan challenge"
 grep -qF -- 'add `Challenge: YYYY-MM-DD <verdict>` to the plan header' "$F" && ok "plan challenge recorded in the header" || bad "plan Challenge: header line unnamed"
+grep -qF -- '"holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded)' "$F" && ok "plan challenge verdict mapped to the field" || bad "plan challenge verdict mapping missing"
 grep -qF -- '**Challenge:**' "$F" && ok "plan header template carries Challenge" || bad "plan header template lacks Challenge"
 grep -qF -- 'I recommend Subagent-driven' "$F" && ok "handoff recommends Subagent-driven" || bad "handoff does not recommend Subagent-driven"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT

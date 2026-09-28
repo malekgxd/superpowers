@@ -205,7 +205,7 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan, record its rulings in the plan under a `## Plan challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` to the plan header (`holds`, `holds-with-conditions` or `broken-ruled`), and commit; the handoff waits for that.
+Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan, record its rulings in the plan under a `## Plan challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` to the plan header — map the challenge verdict to the field — "holds" → `holds`, "holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded) — and commit; the handoff waits for that.
 
 After saving and self-reviewing the plan, link it for your human partner
 to read. If they have already explicitly supplied an execution method, ask

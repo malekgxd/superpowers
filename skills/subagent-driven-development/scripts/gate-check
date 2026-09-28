@@ -2,19 +2,34 @@
 # Refuse to start executing a plan unless its gates are on record: the plan names a spec and the
 # spec's intent, that intent passes intent-guard, and both spec and plan carry a Challenge: line.
 # Fields are read only from the header region (line 1 up to the first `## ` line) of the committed
-# HEAD blob; a code fence or `<!--` in that region refuses outright.
+# HEAD blob, which must be NUL-free and match the working-tree header; a code fence or `<!--`
+# in that region refuses outright.
 # Usage: gate-check PLAN_FILE   (run from the repo that holds the plan)
 set -euo pipefail
 [ $# -eq 1 ] || { echo "usage: gate-check PLAN_FILE" >&2; exit 2; }
 plan=$1; [ -f "$plan" ] || { echo "gate-check: no plan at $plan" >&2; exit 2; }
 here=$(cd "$(dirname "$0")" && pwd)
 refuse() { echo "gate-check: REFUSE $1"; exit 1; }
-# Header region of the committed copy of $1, CR stripped.
-header() {
-  local oid blob
-  oid=$(git rev-parse --verify --quiet "HEAD:./$1" 2>/dev/null) || return 1
-  blob=$(git cat-file blob "$oid") || return 1
-  awk '{ gsub(/\r/, "") } /^## /{ exit } 1' <<<"$blob"
+region() { awk '{ gsub(/\r/, "") } /^## /{ exit } 1'; }
+# $(...) silently drops NUL bytes, so refuse them on the byte stream before any capture.
+nul_free() { [ "$(tr -d '\000' | wc -c)" -eq "$1" ]; }
+# load LABEL PATH: set hdr to the header region of PATH's committed blob, CR stripped. The blob must
+# be NUL-free and the working-tree header must match it, so executors read what the gate checked.
+load() {
+  local ref oid blob top wt
+  if [[ "$2" == /* ]]; then
+    top=$(git rev-parse --show-toplevel) || refuse "$1 not in a git repo: $2"
+    [[ "$2" == "$top"/* ]] || refuse "$1 lies outside the repo: $2"
+    ref="HEAD:${2#"$top"/}"
+  else
+    ref="HEAD:./$2"
+  fi
+  oid=$(git rev-parse --verify --quiet "$ref" 2>/dev/null) || refuse "$1 not in HEAD: $2"
+  git cat-file blob "$oid" | nul_free "$(git cat-file -s "$oid")" || refuse "$1 contains NUL bytes: $2"
+  blob=$(git cat-file blob "$oid") || refuse "cannot read $1 from HEAD: $2"
+  hdr=$(region <<<"$blob")
+  wt=$(region < "$2")
+  [ "$wt" = "$hdr" ] || refuse "$1 header differs from the committed version: $2"
 }
 fenced() { grep -qE '```|~~~|<!--' <<<"$1"; }
 # One complete .md path after `**Key:**` / `Key:`: the first whitespace-delimited token, minus one
@@ -38,13 +53,13 @@ challenge() {
     || refuse "$1 Challenge: line is not 'YYYY-MM-DD holds|holds-with-conditions|broken-ruled': $v"
 }
 
-plan_hdr=$(header "$plan") || refuse "plan not in HEAD: $plan"
+load plan "$plan"; plan_hdr=$hdr
 fenced "$plan_hdr" && refuse "plan header holds a code fence or comment; move it below the first ## heading"
 spec=$(path_field Spec "$plan_hdr") || refuse "plan has no Spec: line naming one .md path"
 [ -f "$spec" ] || refuse "spec file missing: $spec"
 intent=$(path_field Intent "$plan_hdr") || refuse "plan has no Intent: line naming one .md path"
 [ -f "$intent" ] || refuse "plan Intent file missing: $intent"
-spec_hdr=$(header "$spec") || refuse "spec not in HEAD: $spec"
+load spec "$spec"; spec_hdr=$hdr
 fenced "$spec_hdr" && refuse "spec header holds a code fence or comment; move it below the first ## heading"
 spec_intent=$(path_field Intent "$spec_hdr") || refuse "spec has no Intent: line naming one .md path"
 guard=$("${BASH:-bash}" "$here/../../writing-plans/scripts/intent-guard" "$spec" 2>&1 || true)

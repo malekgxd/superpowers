@@ -57,11 +57,27 @@ if [ -x "$G" ]; then
   fixture; sed -i '/^\*\*Spec:/d' docs/plans/p.md; printf '\n## Notes\nSpec: docs/specs/s.md\n' >> docs/plans/p.md; C; expect "Spec only below the header refused" 1 "gate-check: REFUSE plan has no Spec:"
   fixture; sed -i '/^##/d' docs/plans/p.md; printf '```\nlate fence\n```\n' >> docs/plans/p.md; C; expect "plan with no ## heading is all header: late fence refused" 1 "gate-check: REFUSE plan header holds a code fence or comment"
   # Plan and spec are read from HEAD: uncommitted edits are not honoured.
-  fixture; sed -i '/^\*\*Challenge:/d' docs/plans/p.md; C; sed -i 's/^\*\*Intent:.*$/&\n**Challenge:** 2026-09-28 holds/' docs/plans/p.md; expect "uncommitted plan Challenge not honoured" 1 "gate-check: REFUSE plan header has no Challenge: line"
-  fixture; sed -i '/^Challenge:/d' docs/specs/s.md; C; sed -i 's/^Intent:.*$/&\nChallenge: 2026-09-28 holds/' docs/specs/s.md; expect "uncommitted spec Challenge not honoured" 1 "gate-check: REFUSE spec header has no Challenge: line"
+  fixture; sed -i '/^\*\*Challenge:/d' docs/plans/p.md; C; sed -i 's/^\*\*Intent:.*$/&\n**Challenge:** 2026-09-28 holds/' docs/plans/p.md; expect "uncommitted plan Challenge not honoured" 1 "gate-check: REFUSE plan header differs from the committed version"
+  fixture; sed -i '/^Challenge:/d' docs/specs/s.md; C; sed -i 's/^Intent:.*$/&\nChallenge: 2026-09-28 holds/' docs/specs/s.md; expect "uncommitted spec Challenge not honoured" 1 "gate-check: REFUSE spec header differs from the committed version"
   fixture; git rm -q --cached docs/plans/p.md; git commit -qm untrack; expect "untracked plan refused" 1 "gate-check: REFUSE plan not in HEAD"
   fixture; git rm -q --cached docs/specs/s.md; git commit -qm untrack; expect "untracked spec refused" 1 "gate-check: REFUSE spec not in HEAD"
-  fixture; printf '# Intent: other\nAuthor: Dee. Status: accepted\n' > docs/intents/j.md; C; sed -i 's#^Intent:.*#Intent: docs/intents/j.md#' docs/specs/s.md; expect "worktree spec Intent differing from HEAD refused" 1 "gate-check: REFUSE intent-guard checked docs/intents/j.md but the committed spec names docs/intents/i.md"
+  fixture; printf '# Intent: other\nAuthor: Dee. Status: accepted\n' > docs/intents/j.md; C; sed -i 's#^Intent:.*#Intent: docs/intents/j.md#' docs/specs/s.md; expect "worktree spec Intent differing from HEAD refused" 1 "gate-check: REFUSE spec header differs from the committed version"
+  # The working-tree header must match the committed one; content below the header may differ.
+  fixture; sed -i '/^Challenge:/d' docs/specs/s.md; expect "working-tree spec Challenge removed refused" 1 "gate-check: REFUSE spec header differs from the committed version"
+  fixture; sed -i 's/^Challenge: .*$/Challenge: 2026-09-28 broken/' docs/specs/s.md; expect "working-tree spec verdict changed to broken refused" 1 "gate-check: REFUSE spec header differs from the committed version"
+  fixture; sed -i 's/^# Plan$/# Plan, edited/' docs/plans/p.md; expect "working-tree plan header edited refused" 1 "gate-check: REFUSE plan header differs from the committed version"
+  fixture; printf -- '- new step\n' >> docs/plans/p.md; expect "working-tree plan body edit accepted" 0 "gate-check: OK"
+  fixture; sed -i 's/$/\r/' docs/plans/p.md; expect "working-tree CRLF-only change accepted" 0 "gate-check: OK"
+  # Committed blobs with NUL bytes refuse before any capture could strip them.
+  fixture; sed -i 's/^\*\*Challenge:/**Chal\x00lenge:/' docs/plans/p.md; C; expect "NUL inside the plan Challenge key refused" 1 "gate-check: REFUSE plan contains NUL bytes"
+  fixture; sed -i 's/^Challenge: 2026-09-28 holds$/Challenge: 2026-09-28 hol\x00ds/' docs/specs/s.md; C; expect "NUL inside the spec verdict refused" 1 "gate-check: REFUSE spec contains NUL bytes"
+  # Absolute paths are made repo-relative before the HEAD read.
+  fixture; out=$("${BASH:-bash}" "$G" "$T/r/docs/plans/p.md" 2>&1) && rc=0 || rc=$?
+  [ "$rc" -eq 0 ] && [[ "$out" == "gate-check: OK" ]] && ok "absolute plan path accepted" || bad "absolute plan path (rc=$rc out=$out)"
+  mkdir -p "$T/r/docs/sub"; out=$(cd "$T/r/docs/sub" && "${BASH:-bash}" "$G" "$T/r/docs/plans/p.md" 2>&1) && rc=0 || rc=$?
+  [ "$rc" -eq 1 ] && [[ "$out" != *"not in HEAD"* ]] && ok "absolute plan path from a subdirectory reads the right blob" || bad "absolute plan path from a subdirectory (rc=$rc out=$out)"
+  cp docs/plans/p.md "$T/outside.md"; out=$("${BASH:-bash}" "$G" "$T/outside.md" 2>&1) && rc=0 || rc=$?
+  [ "$rc" -eq 1 ] && [[ "$out" == *"REFUSE plan lies outside the repo"* ]] && ok "absolute plan path outside the repo refused" || bad "absolute plan outside repo (rc=$rc out=$out)"
   # CRLF is normalized in header lines.
   fixture; sed -i 's/$/\r/' docs/specs/s.md docs/plans/p.md; C; expect "CRLF plan and spec accepted" 0 "gate-check: OK"
   # Full-path parse: never truncate or glob a Spec path.
