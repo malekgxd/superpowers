@@ -11,10 +11,13 @@ grep -qF -- '[REVIEW_FILE]' "$D/task-reviewer-prompt.md" && grep -qF -- 'Write y
 grep -qF -- '[REVIEW_FILE]' "$D/re-review-prompt.md" && grep -qF -- '## Re-review round [ROUND]' "$D/re-review-prompt.md" \
   && ok "re-reviewer appends a round heading to [REVIEW_FILE]" || bad "re-reviewer lacks [REVIEW_FILE] append contract"
 grep -qF -- 'final message is the report itself' "$D/task-reviewer-prompt.md" && bad "task reviewer still told to reply with the whole report" || ok "old reply-is-the-report line is gone"
-grep -qF -- "Search this repo's own files once for an existing one" "$D/task-reviewer-prompt.md" \
+lean=$(tr -s ' \n' ' ' < "$D/task-reviewer-prompt.md")
+grep -qF -- "is a named risk. Search this repo's own files once for an existing one by what it does" <<<"$lean" \
+  && grep -qF -- "A hit is a finding: name the existing path to call instead." <<<"$lean" \
   && ok "task reviewer searches the repo for reuse" || bad "task reviewer lacks the lean reuse search"
-grep -qF -- 'report it in both parts, so the spec verdict is' "$D/task-reviewer-prompt.md" \
+grep -qF -- "Code the brief never asked for is also a Part 1 **Extra** finding: report it in both parts, so the spec verdict is ❌." <<<"$lean" \
   && ok "unrequested code stays a Part 1 Extra" || bad "lean block lost the Part 1 Extra routing"
+grep -qF -- "naming its limit is a decision, not a finding" <<<"$lean" && bad "shortcut comments exempt findings" || ok "no shortcut-comment exemption"
 grep -qF -- 'task-N-review.md' "$D/SKILL.md" && ok "SKILL names the review file" || bad "SKILL never names task-N-review.md"
 grep -qF -- 'final-review.md' "$D/SKILL.md" && ok "SKILL names final-review.md" || bad "SKILL never names final-review.md"
 grep -qF -- 'review-file path' "$D/SKILL.md" && ok "fix dispatches carry the review file" || bad "fix dispatches omit the review file"

@@ -142,8 +142,6 @@ Subagent (general-purpose):
     - **Delete / YAGNI:** dead code, an abstraction with one implementation,
       config nobody sets? Code the brief never asked for is also a Part 1
       **Extra** finding: report it in both parts, so the spec verdict is ❌.
-    - A shortcut the code marks with a `shortcut:` or `ponytail:` comment
-      naming its limit is a decision, not a finding.
 
     Your report should point at evidence: file:line references for every
     finding and for any check you would otherwise answer with a bare
