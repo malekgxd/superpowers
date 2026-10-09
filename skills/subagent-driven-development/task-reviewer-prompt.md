@@ -132,6 +132,19 @@ Subagent (general-purpose):
       significantly grow existing files? (Don't flag pre-existing file
       sizes — focus on what this change contributed.)
 
+    **Lean** (every added line must earn its place; the best fix deletes code):
+    - **Reuse:** every new helper, utility, or near-copy of existing logic
+      is a named risk. Search this repo's own files once for an existing one
+      by what it does (grep for its key verb or noun), and report the search
+      and its hit. A hit is a finding: name the existing path to call instead.
+    - **Stdlib / native:** does the standard library or platform already do
+      what a hand-written loop or a new dependency does?
+    - **Delete / YAGNI:** dead code, an abstraction with one implementation,
+      config nobody sets? Code the brief never asked for is also a Part 1
+      **Extra** finding: report it in both parts, so the spec verdict is ❌.
+    - A shortcut the code marks with a `shortcut:` or `ponytail:` comment
+      naming its limit is a decision, not a finding.
+
     Your report should point at evidence: file:line references for every
     finding and for any check you would otherwise answer with a bare
     "yes." A tight report that cites lines gives the controller everything
