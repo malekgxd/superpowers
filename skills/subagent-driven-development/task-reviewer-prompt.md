@@ -136,7 +136,8 @@ Subagent (general-purpose):
     - **Reuse:** every new helper, utility, or near-copy of existing logic
       is a named risk. Search this repo's own files once for an existing one
       by what it does (grep for its key verb or noun), and report the search
-      and its hit. A hit is a finding: name the existing path to call instead.
+      and its result (the hit, or none). A hit is a finding: name the
+      existing path to call instead.
     - **Stdlib / native:** does the standard library or platform already do
       what a hand-written loop or a new dependency does?
     - **Delete / YAGNI:** dead code, an abstraction with one implementation,
