@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Fork edit check: brainstorming carries the intent gate, frontier rounds, challenge handoff.
 set -euo pipefail
-F="$(dirname "$0")/../../skills/brainstorming/SKILL.md"
+F="${F:-$(dirname "$0")/../../skills/brainstorming/SKILL.md}"
 fail=0
 need() { grep -qF -- "$1" "$F" || { echo "MISSING: $1"; fail=1; }; }
 gone() { grep -qF -- "$1" "$F" && { echo "STILL PRESENT: $1"; fail=1; } || true; }
@@ -33,5 +33,19 @@ need '| Quick | the request itself | do it, say what you did |'
 need 'architectural path the opt-out skips the questions, not the gates'
 need '9. **Builder check**'
 need '"Spec self-review\n(fix inline)" -> "Builder check\n(bring '"'theirs'"' pile)"'
+need '"Builder check\n(bring '"'theirs'"' pile)" -> "User reviews spec?"'
+need '"User reviews spec?" -> "Challenge the spec" [label="approved"]'
+gone '"Spec self-review\n(fix inline)" -> "User reviews spec?"'
+need 'the architectural check comes first'
+need 'On the architectural path the intent is exempt'
+# Negative cases: each mutant of the real file must fail this check.
+if [ -z "${MUTANT:-}" ]; then
+  tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+  mut() { perl -0pe "$1" "$F" > "$tmp/m.md"; MUTANT=1 F="$tmp/m.md" bash "$0" >/dev/null && { echo "MUTANT PASSED: $2"; fail=1; } || true; }
+  mut 's/^.*"Builder check\\n\(bring .theirs. pile\)" -> "User reviews spec\?";\n//m' 'builder -> review edge deleted'
+  mut 's/"Spec self-review\\n\(fix inline\)" -> "Builder check\\n\(bring .theirs. pile\)"/"Spec self-review\\n(fix inline)" -> "User reviews spec?"/' 'self-review -> review bypass restored'
+  mut 's/^## Play It Back$/## Play it back/m' 'heading renamed'
+  mut 's/ the architectural check comes first//' 'quick precedence dropped'
+fi
 [ "$fail" -eq 0 ] && echo "brainstorming: OK"
 exit $fail

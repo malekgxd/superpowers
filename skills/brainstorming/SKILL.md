@@ -24,12 +24,15 @@ Before you reply, ask yourself: what do I know about what they want, and
 why?
 
 - **Everything that matters is in the request** ("make the icon cornflower
-  blue"), and it changes something that already exists here. This is a
-  quick, clear task. Do it, and say what you did.
+  blue"), it changes something that already exists here, and nothing on
+  the architectural list applies (see Size the Work). This is a quick,
+  clear task. Do it, and say what you did.
 - **Something non-trivial is missing.** Size the work (below), say the
   size, and start the conversation.
 
 If you would have to guess at anything that matters, it is not quick.
+A fully specified request is still architectural when it hits an
+architectural trigger; the architectural check comes first.
 
 ## Your First Message
 
@@ -121,9 +124,12 @@ human partner can override it:
 | Bounded | a short design, in chat | build it through the normal workflow, no plan document |
 | Architectural | intent, then a written spec | challenge, then a full plan (superpowers:writing-plans) |
 
-- **Quick** — everything that matters is in the request and it changes
-  something already here (see First: What Do You Actually Know?). One
-  guess that matters makes it bounded.
+- **Quick** — everything that matters is in the request, it changes
+  something already here, and no architectural trigger below applies
+  (see First: What Do You Actually Know?). Check the architectural
+  triggers first: a fully specified change to an interface others
+  depend on is architectural, not quick. One guess that matters makes
+  it bounded.
 - **Spike** — a feasibility question ("can we...", "is it possible...",
   "quick and dirty is fine") whose output is an answer, not code you
   keep. Present the question and what you'll try in 2-3 sentences, get
@@ -248,6 +254,11 @@ they haven't seen the visual companion offer yet, send the offer instead
 (its own message, below) and hold the chunk for the next message. Once
 they've accepted, put a mockup next to the description.
 
+On the architectural path the intent is exempt: present it as text,
+never hold it back for the offer, and put no mockup beside it. The
+visual offer and mockups start after the intent is accepted and
+committed.
+
 ## Anti-Pattern: "Too Simple To Need Approval"
 
 Every path except Quick ends with your human partner approving the
@@ -261,7 +272,7 @@ the selected path; complete that path's reviews before implementation.
 | Thought | Reality |
 |---------|---------|
 | "This is too simple to need a design" | Follow the selected path: a bounded change gets a short chat design; an architectural change gets the written spec and planning handoffs. |
-| "It's quick, I'll just do it" | Quick means nothing that matters is missing. If you'd have to guess at anything that matters, it is bounded. |
+| "It's quick, I'll just do it" | Quick means nothing that matters is missing and no architectural trigger applies. A guess that matters makes it bounded; a new subsystem, a restructure, or an interface others depend on makes it architectural, however fully specified. |
 | "I'll call it bounded and skip the spec" | Reaching for a label to skip work IS the doubt — take the heavier path. |
 | "It's bounded and the design is obvious — I'll start while they read it" | The gate is the approval, not the design's length. Present, then stop until you hear yes. |
 | "I understand this kind of app, so it's bounded" | Bounded measures the repo, not your familiarity. A new project has no existing flow — it is architectural. |
