@@ -36,24 +36,30 @@ architectural trigger; the architectural check comes first.
 
 ## Your First Message
 
-Your first message is three things, in this order:
+For every size but Quick, your first message is three things, in this
+order:
 
 1. The size, out loud: "this looks bounded, so I'll present a short
    design here rather than write a spec." Your human partner can
    override it.
-2. One line letting them know that if they'd rather skip the questions and
-   have you just start, they can say so. If they take you up on it on the
-   spike or bounded path, this skill is done: state any significant
-   how-it-gets-made choice (platform, language, medium) in one plain line,
-   then do what they asked through the normal workflow. On the
-   architectural path the opt-out skips the questions, not the gates:
-   write the intent from the request, mark every guess as yours, and stop
-   for acceptance as usual.
+2. One line offering to skip the questions.
+   - Spike or bounded: "if you'd rather skip the questions and have me
+     just start, say so." If they take you up on it, this skill is done:
+     state any significant how-it-gets-made choice (platform, language,
+     medium) in one plain line, then do what they asked through the
+     normal workflow.
+   - Architectural: "if you'd rather skip the questions, I'll draft the
+     intent from what you've said." On the
+     architectural path the opt-out skips the questions, not the gates:
+     write the intent from the request, mark every guess as yours, and
+     stop for acceptance as usual. After the intent commit, skip the
+     frontier rounds and put each open decision in the spec as your
+     call; the builder check, spec review, challenge, and plan still run.
 3. One open question that gets them describing. Ask about a real moment
    or a concrete picture: "What's the moment you find yourself wishing
    this existed?" or "Tell me about the people who'll be in the room."
    On the architectural path this is the one purpose question allowed
-   before the intent.
+   before the intent. Drop it when the request already gives the purpose.
 
 That's the whole message.
 
@@ -93,7 +99,7 @@ selected path's prerequisites:
 - Spike: the human partner approves the question and probe.
 - Bounded: the human partner approves the short in-chat design.
 - Architectural: the human partner accepts and commits the intent,
-  then reviews and approves the written spec; the spec is challenged
+  then reviews and approves the written spec (after the builder check); the spec is challenged
   (if a `challenge` skill is installed) and its rulings recorded; then
   the partner reviews the written implementation plan and selects its
   execution method. Conversational design approval only permits writing
@@ -160,13 +166,18 @@ stop, say so, and step up. Nothing downgrades mid-task.
 If this is really several independent projects, say so, agree on an
 order, and brainstorm them one at a time.
 
+Outside a software repo (a talk, a business, a renovation), "already
+here" means existing work your human partner has shown you. The intent
+and the written design go where they say; "commit" means saving them
+there. writing-plans is for software only; otherwise the last step is
+handing over the approved design.
+
 ## The Conversation
 
-On the spike and bounded paths, and on the architectural path until the
-intent is committed, each message ends with one question: a single
-sentence with no list of example answers hanging off it. After the intent
-commit, the architectural path asks in frontier rounds instead (Checklist
-step 4). Use plain language, pitched just a little above where your human
+One question per message holds on spike and bounded, and on architectural until the intent is committed.
+Each such message ends with one question: a single sentence with no list
+of example answers hanging off it. After the intent commit, the
+architectural path asks in frontier rounds instead (Checklist step 4). Use plain language, pitched just a little above where your human
 partner is. Match their vocabulary; never use process jargon.
 
 Be clear and concise. Lead with what matters. Avoid jargon. When you
@@ -204,11 +215,11 @@ time...", "If it could only do one of these well, which?", "What would
 make you wince if I got it wrong?" A guess they can correct ("I'm
 guessing this is because X keeps biting you?") often beats a question.
 
-**Look things up; offer recon.** Anything answerable from the repo or
-the environment you look up yourself (read-only exploration is always
-allowed), never ask. For their own files and data outside the project,
-or the web, offer to go look: say what you'd look for. They decide
-whether you go.
+**Look things up; offer recon.**
+Anything answerable from the repo or the environment you look up yourself, never ask.
+Read-only exploration is always allowed. For their own files and data
+outside the project, or the web, offer to go look: say what you'd look
+for. They decide whether you go.
 
 **Think wide privately.** Before you propose anything, come up with
 several ideas and drop the weak ones, including any that fight what
@@ -233,7 +244,9 @@ they want or whether something works. Offer one when it would help.
 When they just want to spike, get out of the way. Spikes get no tests
 or minimal ones, aren't bulletproof, and skip the plan, implementation,
 and review process. Bring what the spike taught you back into the
-conversation.
+conversation. A spike during an architectural brainstorm is its own
+task with its own yes; it may run before the intent commit because
+nothing it builds is kept.
 
 ## Play It Back
 
@@ -243,7 +256,8 @@ behaves), describe that part back in about 200-300 words, then return to
 questions about the next part. Playback and questions alternate through
 the whole conversation; the last chunk covers whatever is left. On the
 architectural path the intent is the first playback, and the design
-sections (Checklist step 6) are the later chunks.
+sections (Checklist step 6) are the later chunks. On the bounded path
+the short in-chat design is the playback; skip the 200-300-word chunks.
 
 Mark anything you're guessing as your guess; only what they said goes in
 as theirs. End each chunk by asking what's wrong or missing.
@@ -276,9 +290,9 @@ the selected path; complete that path's reviews before implementation.
 | "I'll call it bounded and skip the spec" | Reaching for a label to skip work IS the doubt — take the heavier path. |
 | "It's bounded and the design is obvious — I'll start while they read it" | The gate is the approval, not the design's length. Present, then stop until you hear yes. |
 | "I understand this kind of app, so it's bounded" | Bounded measures the repo, not your familiarity. A new project has no existing flow — it is architectural. |
-| "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — classify it. |
-| "It grew, but I'm almost done — no need to re-classify" | Hidden complexity upgrades the path mid-task. Stop and say so. |
-| "They approved the spike, so the follow-up change is approved too" | Each task gets its own classification and its own approval. |
+| "The spike works, so I'll keep the code" | A spike's output is an answer. Keeping the code is a new request — size it. |
+| "It grew, but I'm almost done — no need to re-size" | Hidden complexity upgrades the path mid-task. Stop and say so. |
+| "They approved the spike, so the follow-up change is approved too" | Each task gets its own size and its own approval. |
 | "They said skip the questions, so the intent can go too" | On the architectural path the opt-out skips questions, not gates. Write the intent from the request and stop for acceptance. |
 | "I'll write the intent after the design, once I know what it is" | The intent is what the design is checked against. Write it first, get the yes, commit, then design. |
 | "Twelve questions, one per message, is thorough" | On the architectural path that is twelve round trips with no view of dependencies. Ask the frontier in one round with recommended answers. |
@@ -402,7 +416,9 @@ digraph brainstorming {
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "Builder check\n(bring 'theirs' pile)";
     "Builder check\n(bring 'theirs' pile)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
+    "Revise spec; self-review again\n(no second builder check)" [shape=box];
+    "User reviews spec?" -> "Revise spec; self-review again\n(no second builder check)" [label="changes requested"];
+    "Revise spec; self-review again\n(no second builder check)" -> "User reviews spec?";
     "User reviews spec?" -> "Challenge the spec" [label="approved"];
     "Challenge the spec" -> "Invoke writing-plans skill" [label="rulings recorded"];
 }
@@ -493,8 +509,8 @@ After writing the spec document, look at it with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
-**Builder check:** dispatch a fresh general-purpose subagent (`model:
-sonnet`) with `builder-check-prompt.md` in this directory. When you tell
+**Builder check:** dispatch a fresh general-purpose subagent (`model: sonnet`)
+with `builder-check-prompt.md` in this directory. When you tell
 your human partner you're writing it up, say a reviewer will read it
 first and you may come back once with a few questions. Don't hand over
 the document until the check is back. Sort what the builder asks into
@@ -518,7 +534,7 @@ After the builder check, ask the user to review the written spec before proceedi
 
 > "Spec written and committed to `<path>`. The calls I made: <list>. Please review it and let me know if you want to make any changes before we challenge the spec and write out the implementation plan."
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+Wait for the user's response. If they request changes, make them and re-run the spec self-review, not the builder check. Only proceed once the user approves.
 
 **Challenge, then implementation:**
 
