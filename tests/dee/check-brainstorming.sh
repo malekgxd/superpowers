@@ -26,5 +26,12 @@ need 'Written-spec approval only permits `challenge` and then writing-plans'
 need 'record the rulings in the spec under a `## Challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>`'
 need '"holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded)'
 gone 'written-spec approval only permits invoking writing-plans'
+for h in 'First: What Do You Actually Know?' 'Your First Message' 'The Conversation' 'Play It Back' 'Size the Work' 'The Written Design' 'Red Flags' 'Visual Companion'; do
+  grep -qxF -- "## $h" "$F" || { echo "MISSING heading: $h"; fail=1; }
+done
+need '| Quick | the request itself | do it, say what you did |'
+need 'architectural path the opt-out skips the questions, not the gates'
+need '9. **Builder check**'
+need '"Spec self-review\n(fix inline)" -> "Builder check\n(bring '"'theirs'"' pile)"'
 [ "$fail" -eq 0 ] && echo "brainstorming: OK"
 exit $fail
