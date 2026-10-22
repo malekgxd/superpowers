@@ -175,7 +175,7 @@ After writing the spec document, look at it with fresh eyes:
 Fix any issues inline. No need to re-review — just fix and move on.
 
 **Builder check:** dispatch a fresh general-purpose subagent (`model: sonnet`)
-with `builder-check-prompt.md` in this directory. When you tell
+with [builder-check-prompt.md](../builder-check-prompt.md). When you tell
 your human partner you're writing it up, say a reviewer will read it
 first and you may come back once with a few questions. Don't hand over
 the document until the check is back. Sort what the builder asks into

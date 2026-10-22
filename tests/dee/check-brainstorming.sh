@@ -15,6 +15,11 @@ for s in '<HARD-GATE>' 'architectural path every gate above still holds' '| Quic
   '2. **Write the intent** — before any design question' '9. **Builder check**' '11. **Challenge the spec**' '12. **Transition to implementation**' \
   '**Terminal states are path-bound.**' 'read [references/architectural.md](references/architectural.md) before step 2'; do in_skill "$s"; done
 in_skill 'before steps 4, 7, 9 and 11'
+# Rulings most likely to regress at the next upstream merge (Opus round 1, 7.0.1).
+gone 'Short or full, the design doc'; gone '| Size | The design doc |'
+in_skill 'no plan document |'; in_skill 'leave the offer out'; in_skill 'a single sentence with no list'; in_skill 'one question, a single sentence'
+# Every markdown link inside references/ resolves.
+for rf in "$D"/references/*.md; do for l in $(grep -oE '\]\([^)#: ]+\.md\)' "$rf" | sed 's/^](//; s/)$//' | sort -u); do [ -f "$(dirname "$rf")/$l" ] || { echo "$(basename "$rf") points at missing $l"; fail=1; }; done; done
 for l in $(grep -oE '\(references/[a-z-]+\.md\)' "$F" | tr -d '()' | sort -u); do [ -f "$D/$l" ] || { echo "SKILL.md points at missing $l"; fail=1; }; done
 for r in architectural conversation; do grep -qF "(references/$r.md)" "$F" || { echo "SKILL.md never points at references/$r.md"; fail=1; }; done
 need '2. **Write the intent**'
@@ -77,6 +82,9 @@ if [ -z "${BRAINSTORM_CHECK_MUTANT:-}" ]; then
   mut SKILL.md 's/^11\. \*\*Challenge the spec\*\*.*\n//m' 'challenge step dropped from SKILL.md checklist'
   mut SKILL.md 's/\(references\/conversation\.md\)/(references\/talk.md)/g' 'every conversation pointer broken'
   mut SKILL.md 's/before steps 4, 7, 9 and 11/before step 4/' 'architectural reload schedule cut'
+  mut SKILL.md 's/ and leave the offer out//' 'asked-for brainstorming still offers to skip'
+  mut references/architectural.md 's/\(\.\.\/builder-check-prompt\.md\)/(builder-check-prompt.md)/' 'builder prompt path broken'
+  mut SKILL.md 's/\| Bounded \| a short design, in chat \| build it through the normal workflow, no plan document \|/| Bounded | a short design doc | superpowers:writing-plans |/' 'bounded row turned into doc + plan'
   mut SKILL.md 's/\(references\/architectural\.md\)/(references\/arch.md)/g' 'every architectural pointer broken'
 fi
 [ "$fail" -eq 0 ] && echo "brainstorming: OK"

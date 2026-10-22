@@ -66,19 +66,22 @@ order:
      so plainly. How to build it comes later (see Lay out the
      approaches). End with one line inviting corrections, then one
      question about the thing their request leaves open whose answer
-     would most change what gets built. Specs are often incomplete, so
+     would most change what gets built: one question, a single sentence,
+     no options listed under it. Specs are often incomplete, so
      confirm before you build on one. On the architectural path the
      intent is this echo: write it and present it instead, with the
      question under its Open questions heading.
    - **They haven't:** one open question, in their own terms, about the
      biggest thing their request leaves unsettled. Say why you're asking:
-     what the answer would change about what you build. (Example in
-     references/conversation.md.)
+     what the answer would change about what you build. One question, a
+     single sentence, no options listed under it (example in
+     references/conversation.md).
      On the architectural path this is the one purpose question allowed
      before the intent.
-3. If their message didn't ask for brainstorming (by name, by invoking
-   it, or by asking for a design discussion), a light one-line offer to
-   skip the questions. If they asked for it, leave the offer out.
+3. If they asked for brainstorming (by name, "let's brainstorm" counts,
+   by invoking it, or by asking for a design discussion), end on your
+   question and leave the offer out. Otherwise, a light one-line offer to
+   skip the questions:
    - Spike or bounded: "Or if you'd rather I just dive in, say so." If
      they take you up on it, this skill is done: state any significant
      how-it-gets-made choice (platform, language, medium) in one plain

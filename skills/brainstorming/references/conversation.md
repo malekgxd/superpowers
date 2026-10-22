@@ -18,7 +18,7 @@ recognize and correct, grounded in what they want to accomplish.
    can assess. Separate what they said from assumptions. Invite correction
    and incorporate their answer before treating this as the design brief.
    On the architectural path the intent file is this write-back: write it
-   with the Intent template below, not as a separate note.
+   with the Intent template in [architectural.md](architectural.md), not as a separate note.
 3. **Carry intent into the design.** Preserve the agreed understanding in
    the selected path's design artifact: the written spec for architectural
    work, or the in-chat design/probe for bounded work and spikes. Check
@@ -125,5 +125,5 @@ they decline, stay in text and don't offer again unless they raise it.
 
 A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
 
-If they accept, read `visual-companion.md` in this directory before
+If they accept, read [visual-companion.md](../visual-companion.md) before
 starting the server.

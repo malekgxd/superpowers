@@ -79,6 +79,7 @@ for r in fix-loop final-review review-file gate-check; do grep -qF "(references/
 grep -qF -- '<workspace>/final-review.md' "$D/references/final-review.md" && grep -qF -- 'Declined to judge' "$D/references/final-review.md" \
   && grep -qF -- 'bash scripts/sdd-archive' "$D/references/final-review.md" && ok "final-review.md carries report file, Declined-to-judge, sdd-archive" || bad "final-review.md lost a fork contract"
 grep -qF -- 'review-file path' "$D/references/fix-loop.md" && ok "fix-loop.md carries the review file" || bad "fix-loop.md lost the review file"
+for s in 'do not dispatch' 'Read it again before every round' '(references/waiting.md)'; do grep -qF -- "$s" "$D/SKILL.md" || bad "SKILL.md lost: $s"; done
 grep -qF -- 'ledger each Minor finding' "$D/SKILL.md" && ok "SKILL.md ledgers Minor findings on every review" || bad "Minor findings only ledgered inside the fix loop"
 # Negative cases: each mutant of a copy of the skill dir must fail this check; a no-op mutant fails too.
 if [ -z "${SDD_CHECK_MUTANT:-}" ]; then
@@ -89,6 +90,7 @@ if [ -z "${SDD_CHECK_MUTANT:-}" ]; then
   mut references/final-review.md 's/`<workspace>\/final-review\.md`/the workspace/' 'final review report file dropped'
   mut SKILL.md 's/^After every review, read its review file and ledger each Minor finding\n.*\n\n//m' 'Minor-finding ledger line dropped'
   mut references/fix-loop.md 's/review-file path/review path/g' 'fix-loop review file dropped'
+  mut SKILL.md 's/ Read it again before every round,/,/' 'fix-loop reread dropped'
 fi
 
 [ "$fail" -eq 0 ] && echo "sdd: OK"
