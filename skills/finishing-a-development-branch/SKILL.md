@@ -69,8 +69,8 @@ When acting on the line:
 
 - `merge locally`: Option 1.
 - `merge and push`: Option 1, then push the recorded merge commit once
-  (see "Push the recorded commit"). A failed push is reported, never
-  retried with force.
+  (see "Push the recorded commit"). A failed push is reported;
+  never retried with force.
 - `merge locally; ask before push`: Option 1, then one question: push or not.
 
 **Push scope check** (for the two push values). Run it after `git pull`

@@ -13,16 +13,16 @@ pin 'before the merge'
 pin 'authorizes `git push` only'
 pin 'git push origin "$MERGED":refs/heads/<base-branch>'
 pin 'git merge-base --is-ancestor <commit> <feature-branch>'
-PINS2=('this session ran the review chain on this branch' 'Stop and ask, listing those commits' 'Keep the feature branch until that is answered' 'retried with force' 'git push origin "$MERGED":refs/heads/<base-branch>' 'git merge-base --is-ancestor <commit> <feature-branch>')
-for x in "${PINS2[@]:0:4}"; do pin "$x"; done
+PINS2=('Step 1 tests passed' 'detached HEAD always gets the menu' 'this session ran the review chain on this branch' 'Stop and ask, listing those commits' 'Keep the feature branch until that is answered' 'never retried with force' 'git push origin "$MERGED":refs/heads/<base-branch>' 'git merge-base --is-ancestor <commit> <feature-branch>')
+for x in "${PINS2[@]:0:6}"; do pin "$x"; done
 if [ -z "${FINISH_MUTANT:-}" ]; then
-  mt=$(mktemp -d); trap 'rm -rf "$mt"' EXIT
+  mt=$(mktemp -d); trap 'rm -rf "$mt" "${T:-}"' EXIT
   for x in "${PINS2[@]}"; do cp "$F" "$mt/SKILL.md"; PIN="$x" perl -0pi -e 's/\Q$ENV{PIN}\E/X/' "$mt/SKILL.md"
     cmp -s "$F" "$mt/SKILL.md" && { bad "MUTANT NO-OP: $x"; continue; }
     FINISH_MUTANT=1 FINISH_SKILL="$mt/SKILL.md" bash "$0" >/dev/null 2>&1 && bad "MUTANT PASSED: $x" || ok "mutant caught: $x"; done
 fi
 [ -n "${FINISH_MUTANT:-}" ] && { [ "$fail" -eq 0 ]; exit; }
-T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
+T=$(mktemp -d); trap 'rm -rf "${mt:-}" "$T"' EXIT
 G() { git -c user.name=t -c user.email=t@t "$@"; }
 mk() { # mk NAME -> $T/NAME/{origin.git,repo}; main pushed with one commit
   mkdir -p "$T/$1"; git init -q --bare -b main "$T/$1/origin.git"
