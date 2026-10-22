@@ -11,6 +11,7 @@ grep -qF -- 'add `Challenge: YYYY-MM-DD <verdict>` to the plan header' "$F" && o
 grep -qF -- '"holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded)' "$F" && ok "plan challenge verdict mapped to the field" || bad "plan challenge verdict mapping missing"
 grep -qF -- '**Challenge:**' "$F" && ok "plan header template carries Challenge" || bad "plan header template lacks Challenge"
 grep -qF -- 'Plan complete and saved to' "$F" && grep -qF -- 'Building it subagent-driven' "$F" && grep -qF -- 'stops only when the plan challenge has a finding only your human partner can rule on, or the plan would change behaviour the spec states' "$F" && ok "handoff announces and starts" || bad "handoff does not announce and start"
+grep -qF -- '**When an execution method has already been supplied:**' "$F" && grep -qF -- 'Building it with the method you supplied' "$F" && ok "supplied-method branch announces and starts" || bad "supplied-method branch missing"
 ! grep -qF -- 'Which execution approach would you prefer?' "$F" && ! grep -qF -- 'Please review the plan.' "$F" && ok "handoff questions gone" || bad "handoff still asks"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 mk() { # mk NAME INTENT_STATUS  -> repo with committed spec+intent

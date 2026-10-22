@@ -207,11 +207,15 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan, record its rulings in the plan under a `## Plan challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` to the plan header — map the challenge verdict to the field — "holds" → `holds`, "holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded) — and commit; the handoff waits for that.
 
-After saving and self-reviewing the plan, committing it and recording the challenge, announce and start. Do not ask for a review and do not ask which method to use. The method is the one the design message's "Calls I made" list named: subagent-driven by default, or native when your human partner's reply said "native". A method they supplied explicitly wins.
+After saving and self-reviewing the plan, committing it and recording the challenge, announce and start. Do not ask for a review and do not ask which method to use. The method is the one the design message's "Calls I made" list named: subagent-driven by default, or native when your human partner's reply said "native".
 
-**Announce, then start:**
+**When no execution method has already been supplied:**
 
 **"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Challenge: <verdict>. Building it subagent-driven."** (for native: "Building it natively with executing-plans.")
+
+**When an execution method has already been supplied:**
+
+**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Challenge: <verdict>. Building it with the method you supplied: <method>."** Then start with that method.
 
 The handoff stops only when the plan challenge has a finding only your human partner can rule on, or the plan would change behaviour the spec states. Task order, task splits and file layout are not behaviour changes. When it stops, name the finding or the changed behaviour and ask that one question.
 
