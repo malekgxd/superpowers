@@ -2,6 +2,8 @@
 # SDD fork edits: reviewer findings land in a file, and a finished workspace is archived, not deleted.
 set -euo pipefail
 D="$(cd "$(dirname "$0")/../../skills/subagent-driven-development" && pwd)"
+# Upstream 7.0.1 moved the fix loop and final review into references/: check the skill text as a whole.
+SK=$(cat "$D/SKILL.md" "$D"/references/*.md)
 fail=0
 ok() { echo "OK   $1"; }
 bad() { echo "FAIL $1"; fail=1; }
@@ -18,15 +20,15 @@ grep -qF -- "is a named risk. Search this repo's own files once for an existing 
 grep -qF -- "Code the brief never asked for is also a Part 1 **Extra** finding: report it in both parts, so the spec verdict is ❌." <<<"$lean" \
   && ok "unrequested code stays a Part 1 Extra" || bad "lean block lost the Part 1 Extra routing"
 grep -qE -- 'ponytail:|shortcut:' "$D/task-reviewer-prompt.md" && bad "shortcut comments exempt findings" || ok "no shortcut-comment exemption"
-grep -qF -- 'task-N-review.md' "$D/SKILL.md" && ok "SKILL names the review file" || bad "SKILL never names task-N-review.md"
-grep -qF -- 'final-review.md' "$D/SKILL.md" && ok "SKILL names final-review.md" || bad "SKILL never names final-review.md"
-grep -qF -- 'review-file path' "$D/SKILL.md" && ok "fix dispatches carry the review file" || bad "fix dispatches omit the review file"
-grep -qF -- 'rm -rf <workspace>' "$D/SKILL.md" && bad "SKILL still deletes the workspace" || ok "SKILL no longer deletes the workspace"
-grep -qF -- 'scripts/sdd-archive' "$D/SKILL.md" && ok "SKILL finishes with sdd-archive" || bad "SKILL never calls sdd-archive"
-grep -qF -- 'delete this plan' "$D/SKILL.md" && bad "SKILL still says delete this plan" || ok "process flow says archive"
+grep -qF -- 'task-N-review.md' <<<"$SK" && ok "SKILL names the review file" || bad "SKILL never names task-N-review.md"
+grep -qF -- 'final-review.md' <<<"$SK" && ok "SKILL names final-review.md" || bad "SKILL never names final-review.md"
+grep -qF -- 'review-file path' <<<"$SK" && ok "fix dispatches carry the review file" || bad "fix dispatches omit the review file"
+grep -qF -- 'rm -rf <workspace>' <<<"$SK" && bad "SKILL still deletes the workspace" || ok "SKILL no longer deletes the workspace"
+grep -qF -- 'scripts/sdd-archive' <<<"$SK" && ok "SKILL finishes with sdd-archive" || bad "SKILL never calls sdd-archive"
+grep -qF -- 'delete this plan' <<<"$SK" && bad "SKILL still says delete this plan" || ok "process flow says archive"
 [ -x "$D/scripts/sdd-archive" ] && ok "sdd-archive is executable" || bad "scripts/sdd-archive missing or not executable"
 grep -qF -- '"${BASH:-bash}" "$here/sdd-workspace"' "$D/scripts/sdd-archive" && ok "sdd-archive calls sdd-workspace via bash" || bad "sdd-archive execs sdd-workspace directly"
-grep -qE -- '(^|[^/])scripts/sdd-archive' "$D/SKILL.md" && ! grep -qE -- '(^|[^h] )`?scripts/sdd-archive' "$D/SKILL.md" && ok "SKILL calls sdd-archive via bash" || bad "SKILL calls sdd-archive without bash"
+grep -qE -- '(^|[^/])scripts/sdd-archive' <<<"$SK" && ! grep -qE -- '(^|[^h] )`?scripts/sdd-archive' <<<"$SK" && ok "SKILL calls sdd-archive via bash" || bad "SKILL calls sdd-archive without bash"
 
 # Fixture: a throwaway repo with one plan, one workspace holding a ledger.
 if [ -x "$D/scripts/sdd-archive" ]; then
@@ -69,7 +71,7 @@ fi
 E="$(cd "$D/../executing-plans" && pwd)/SKILL.md"
 grep -qiF -- "delete this plan's workspace" "$E" && bad "executing-plans still deletes the workspace" || ok "executing-plans archives the workspace"
 grep -qF -- 'sdd-archive PLAN_FILE' "$E" && ok "executing-plans finishes with sdd-archive" || bad "executing-plans never calls sdd-archive"
-grep -qF -- 'Declined to judge' "$D/SKILL.md" && ok "SDD final review returns Declined-to-judge lines" || bad "SDD final review drops Declined-to-judge lines"
+grep -qF -- 'Declined to judge' <<<"$SK" && ok "SDD final review returns Declined-to-judge lines" || bad "SDD final review drops Declined-to-judge lines"
 
 [ "$fail" -eq 0 ] && echo "sdd: OK"
 exit $fail
