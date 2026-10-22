@@ -294,6 +294,9 @@ the task complete.
 
 Template: [task-reviewer-prompt.md](task-reviewer-prompt.md)
 
+After every review, read its review file and ledger each Minor finding
+(`Task <N>: minor (deferred): <one-liner>`) before deciding on a fix loop.
+
 ### 4. The fix loop
 
 The loop triggers when the review reports spec ❌, any Critical or Important

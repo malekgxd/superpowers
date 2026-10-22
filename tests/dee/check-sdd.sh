@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SDD fork edits: reviewer findings land in a file, and a finished workspace is archived, not deleted.
 set -euo pipefail
-D="$(cd "$(dirname "$0")/../../skills/subagent-driven-development" && pwd)"
+D="$(cd "${SDD_SKILL_DIR:-$(dirname "$0")/../../skills/subagent-driven-development}" && pwd)"
 # Upstream 7.0.1 moved the fix loop and final review into references/: check the skill text as a whole.
 SK=$(cat "$D/SKILL.md" "$D"/references/*.md)
 fail=0
@@ -68,10 +68,28 @@ if [ -x "$D/scripts/sdd-archive" ]; then
   [ -n "$db" ] && [ -f "$db/progress.md" ] && grep -q 'docs/beta/plan.md' "$db/progress.md" && [ ! -e "$wb" ] && ok "archiving beta moves beta's ledger" || bad "archiving beta did not move its ledger (dest=$db)"
 fi
 
-E="$(cd "$D/../executing-plans" && pwd)/SKILL.md"
+E="$(cd "$(dirname "$0")/../../skills/executing-plans" && pwd)/SKILL.md"
 grep -qiF -- "delete this plan's workspace" "$E" && bad "executing-plans still deletes the workspace" || ok "executing-plans archives the workspace"
 grep -qF -- 'sdd-archive PLAN_FILE' "$E" && ok "executing-plans finishes with sdd-archive" || bad "executing-plans never calls sdd-archive"
 grep -qF -- 'Declined to judge' <<<"$SK" && ok "SDD final review returns Declined-to-judge lines" || bad "SDD final review drops Declined-to-judge lines"
+
+# Reachability: rules that moved to references/ must be read from SKILL.md, and live in the file that is read.
+for l in $(grep -oE '\(references/[a-z-]+\.md\)' "$D/SKILL.md" | tr -d '()' | sort -u); do [ -f "$D/$l" ] || bad "SKILL.md points at missing $l"; done
+for r in fix-loop final-review review-file gate-check; do grep -qF "(references/$r.md)" "$D/SKILL.md" || bad "SKILL.md never points at references/$r.md"; done
+grep -qF -- '<workspace>/final-review.md' "$D/references/final-review.md" && grep -qF -- 'Declined to judge' "$D/references/final-review.md" \
+  && grep -qF -- 'bash scripts/sdd-archive' "$D/references/final-review.md" && ok "final-review.md carries report file, Declined-to-judge, sdd-archive" || bad "final-review.md lost a fork contract"
+grep -qF -- 'review-file path' "$D/references/fix-loop.md" && ok "fix-loop.md carries the review file" || bad "fix-loop.md lost the review file"
+grep -qF -- 'ledger each Minor finding' "$D/SKILL.md" && ok "SKILL.md ledgers Minor findings on every review" || bad "Minor findings only ledgered inside the fix loop"
+# Negative cases: each mutant of a copy of the skill dir must fail this check; a no-op mutant fails too.
+if [ -z "${SDD_CHECK_MUTANT:-}" ]; then
+  mt=$(mktemp -d); trap 'rm -rf "$mt"' EXIT
+  mut() { rm -rf "$mt/m"; cp -r "$D" "$mt/m"; perl -0pi -e "$2" "$mt/m/$1"; cmp -s "$D/$1" "$mt/m/$1" && { bad "mutant no-op: $3"; return; }
+    SDD_CHECK_MUTANT=1 SDD_SKILL_DIR="$mt/m" bash "$0" >/dev/null 2>&1 && bad "mutant passed: $3" || true; }
+  mut SKILL.md 's/\(references\/final-review\.md\)/(references\/final.md)/g' 'final-review pointer broken'
+  mut references/final-review.md 's/`<workspace>\/final-review\.md`/the workspace/' 'final review report file dropped'
+  mut SKILL.md 's/^After every review, read its review file and ledger each Minor finding\n.*\n\n//m' 'Minor-finding ledger line dropped'
+  mut references/fix-loop.md 's/review-file path/review path/g' 'fix-loop review file dropped'
+fi
 
 [ "$fail" -eq 0 ] && echo "sdd: OK"
 exit $fail

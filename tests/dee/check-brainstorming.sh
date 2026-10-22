@@ -14,6 +14,8 @@ in_skill() { grep -qF -- "$1" "$F" || { echo "NOT IN SKILL.md: $1"; fail=1; }; }
 for s in '<HARD-GATE>' 'architectural path every gate above still holds' '| Quick | the request itself | do it, say what you did |' \
   '2. **Write the intent** — before any design question' '9. **Builder check**' '11. **Challenge the spec**' '12. **Transition to implementation**' \
   '**Terminal states are path-bound.**' 'read [references/architectural.md](references/architectural.md) before step 2'; do in_skill "$s"; done
+in_skill 'before steps 4, 7, 9 and 11'
+for l in $(grep -oE '\(references/[a-z-]+\.md\)' "$F" | tr -d '()' | sort -u); do [ -f "$D/$l" ] || { echo "SKILL.md points at missing $l"; fail=1; }; done
 for r in architectural conversation; do grep -qF "(references/$r.md)" "$F" || { echo "SKILL.md never points at references/$r.md"; fail=1; }; done
 need '2. **Write the intent**'
 need 'docs/superpowers/intents/YYYY-MM-DD-<topic>.md'
@@ -74,6 +76,8 @@ if [ -z "${BRAINSTORM_CHECK_MUTANT:-}" ]; then
   mut SKILL.md 's/If they opted out of the questions on the spike or\nbounded path, the skill is done and the gate goes with it; on the\narchitectural path every gate above still holds\./If they opted out of the questions, the skill is done and the gate goes with it./' 'upstream opt-out restored in HARD-GATE'
   mut SKILL.md 's/^11\. \*\*Challenge the spec\*\*.*\n//m' 'challenge step dropped from SKILL.md checklist'
   mut SKILL.md 's/\(references\/conversation\.md\)/(references\/talk.md)/g' 'every conversation pointer broken'
+  mut SKILL.md 's/before steps 4, 7, 9 and 11/before step 4/' 'architectural reload schedule cut'
+  mut SKILL.md 's/\(references\/architectural\.md\)/(references\/arch.md)/g' 'every architectural pointer broken'
 fi
 [ "$fail" -eq 0 ] && echo "brainstorming: OK"
 exit $fail
