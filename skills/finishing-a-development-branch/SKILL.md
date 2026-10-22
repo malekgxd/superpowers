@@ -91,7 +91,10 @@ merge and runs in the main checkout, in this order:
    Never push a merge resolved by hand.
 - **e.** Record `MERGED=$(git rev-parse <base-branch>)`, then run the tests.
    If the merged tests fail, stop; nothing has been pushed.
-- **f.** Every commit in `git rev-list "$ORIGIN".."$MERGED"` must be `$MERGED` or
+- **f.** `$MERGED` must equal `$FEATURE_OID` (fast-forward) or be a merge commit
+   whose parents are exactly `$ORIGIN` and `$FEATURE_OID`, checked with
+   `git rev-list --parents -n1 "$MERGED"`; anything else: stop and ask.
+   Every commit in `git rev-list "$ORIGIN".."$MERGED"` must be `$MERGED` or
    in `git rev-list "$ORIGIN".."$FEATURE_OID"`.
    If either command fails or any other commit is listed, stop and ask,
    listing them: push all, or don't push.

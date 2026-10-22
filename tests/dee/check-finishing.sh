@@ -12,7 +12,7 @@ pin 'authorizes `git push` only'
 # Each pin below also gets a deletion mutant. STEPS are the push rule's commands, in the order the skill must give them.
 STEPS=('git fetch origin' 'ORIGIN=$(git rev-parse origin/<base-branch>)' 'git rev-list "$ORIGIN"..<base-branch>' 'git merge --ff-only "$ORIGIN"'
   'FEATURE_OID=$(git rev-parse <feature-branch>)' 'git merge --no-edit <feature-branch>' 'MERGED=$(git rev-parse <base-branch>)'
-  'git rev-list "$ORIGIN".."$MERGED"' 'git rev-list "$ORIGIN".."$FEATURE_OID"' 'git push origin "$MERGED":refs/heads/<base-branch>')
+  'git rev-list --parents -n1 "$MERGED"' 'git rev-list "$ORIGIN".."$MERGED"' 'git rev-list "$ORIGIN".."$FEATURE_OID"' 'git push origin "$MERGED":refs/heads/<base-branch>')
 PINS2=("${STEPS[@]}" 'Step 1 tests passed' 'detached HEAD always gets the menu'
   "this session ran the review chain on this branch's current HEAD and it passed"
   'the main checkout is already on `<base-branch>`' '(`git -C <main-checkout> branch --show-current`); otherwise the menu'
@@ -20,7 +20,8 @@ PINS2=("${STEPS[@]}" 'Step 1 tests passed' 'detached HEAD always gets the menu'
   "Otherwise stop and ask, listing those commits: push all, or don't push." 'If the fast-forward fails, stop and ask.'
   'A conflict or any other merge failure: `git merge --abort`, then the menu.' 'If the merged tests fail, stop; nothing has been pushed.'
   'If either command fails or any other commit is listed, stop and ask,' "listing them: push all, or don't push."
-  'never retried with force' 'Under `merge locally; ask before push`, ask push or not here'
+  '`$MERGED` must equal `$FEATURE_OID` (fast-forward) or be a merge commit' 'whose parents are exactly `$ORIGIN` and `$FEATURE_OID`, checked with'
+  '; anything else: stop and ask.' 'never retried with force' 'Under `merge locally; ask before push`, ask push or not here'
   'Keep the feature branch until the push is settled' 'If tests fail on the merged result: stop')
 for x in "${PINS2[@]}"; do pin "$x"; done
 last=0; for x in "${STEPS[@]}"; do n=$(grep -boF -- "$x" "$F" | head -1 | cut -d: -f1); n=${n:-0}
@@ -48,7 +49,7 @@ otip() { git --git-dir="$(git config remote.origin.url)" rev-parse main 2>/dev/n
 osubj() { git --git-dir="$(git config remote.origin.url)" log main --format=%s | LC_ALL=C sort | tr '\n' ' '; }
 # finish [AFTER HOOK]: the skill's push rule, steps a-g, run literally on main/feat; HOOK runs after step AFTER.
 # Prints push | rejected | ask:<step> | menu | stop:e.
-finish() { local after="${1:-}" hook="${2:-}" ORIGIN FEATURE_OID MERGED out allowed c
+finish() { local after="${1:-}" hook="${2:-}" ORIGIN FEATURE_OID MERGED out allowed c par
   at() { [ "$after" = "$1" ] && eval "$hook"; return 0; }
   { git fetch -q origin && ORIGIN=$(git rev-parse -q --verify origin/main); } 2>/dev/null || { echo ask:a; return; }; at a  # a
   out=$(git rev-list "$ORIGIN"..main 2>/dev/null) && [ -z "$out" ] || { echo ask:b; return; }                            # b
@@ -56,7 +57,9 @@ finish() { local after="${1:-}" hook="${2:-}" ORIGIN FEATURE_OID MERGED out allo
   FEATURE_OID=$(git rev-parse feat)                                                                                     # d
   G merge -q --no-edit feat >/dev/null 2>&1 || { git merge --abort; echo menu; return; }; at d
   MERGED=$(git rev-parse main); bash t.sh || { echo stop:e; return; }; at e                                             # e
-  { out=$(git rev-list "$ORIGIN".."$MERGED") && allowed=$(git rev-list "$ORIGIN".."$FEATURE_OID"); } 2>/dev/null || { echo ask:f; return; }  # f
+  par=$(git rev-list --parents -n1 "$MERGED" 2>/dev/null) || { echo ask:f; return; }                                    # f
+  [ "$MERGED" = "$FEATURE_OID" ] || [ "$par" = "$MERGED $ORIGIN $FEATURE_OID" ] || { echo ask:f; return; }
+  { out=$(git rev-list "$ORIGIN".."$MERGED") && allowed=$(git rev-list "$ORIGIN".."$FEATURE_OID"); } 2>/dev/null || { echo ask:f; return; }
   for c in $out; do [ "$c" = "$MERGED" ] || grep -qx "$c" <<<"$allowed" || { echo ask:f; return; }; done
   git push -q origin "$MERGED":refs/heads/main 2>/dev/null && echo push || echo rejected; }                            # g
 # (1) clean finish: the push carries exactly the feature commits (fast-forward)
@@ -74,6 +77,9 @@ mk postcut; branch; commit other; o=$(otip); r=$(finish)
 # (5) a commit lands on base between d and e (a real merge, origin moved) -> caught at f
 mk race; branch; moved race; o=$(otip); r=$(finish d 'commit racer')
 [ "$r" = ask:f ] && [ "$(otip)" = "$o" ] && ok "(5) commit between merge and record caught at f" || bad "(5) r=$r"
+# (5b) the same race after a fast-forward merge: the racer becomes $MERGED itself -> caught at f by the parent check
+mk ffrace; branch; o=$(otip); r=$(finish d 'commit racer')
+[ "$r" = ask:f ] && [ "$(otip)" = "$o" ] && ok "(5b) commit after a fast-forward merge caught at f" || bad "(5b) r=$r"
 # (6) no origin ref -> asks at a; a failed rev-list -> asks at b, never a vacuous pass
 mk noref; branch; git --git-dir="$T/noref/origin.git" update-ref -d refs/heads/main; git update-ref -d refs/remotes/origin/main; r=$(finish)
 [ "$r" = ask:a ] && ok "(6) missing origin ref asks at a" || bad "(6) r=$r"
