@@ -68,8 +68,9 @@ No line, a failed condition, or any other value gets the menu below.
 When acting on the line:
 
 - `merge locally`: Option 1.
-- `merge and push`: Option 1, then `git push origin <base-branch>` once.
-  A failed push is reported, never retried with force.
+- `merge and push`: Option 1, then push the recorded merge commit once
+  (see "Push the recorded commit"). A failed push is reported, never
+  retried with force.
 - `merge locally; ask before push`: Option 1, then one question: push or not.
 
 **Push scope check** (for the two push values). Run it after `git pull`
@@ -83,6 +84,17 @@ If the output is not empty or the command fails, other commits would go
 out with this branch. Stop and ask, listing those commits: push all, push
 only this branch (`git push origin <feature-branch>`; the base is not
 pushed), or don't push. Keep the feature branch until that is answered.
+
+Offer "push only this branch" only if no listed commit is in the feature
+branch's history: check each with
+`git merge-base --is-ancestor <commit> <feature-branch>`. If any is, offer
+only "push all" or "don't push" and say why in one line (those commits are
+already part of this branch).
+
+**Push the recorded commit.** Right after the merge, record
+`MERGED=$(git rev-parse <base-branch>)` and push exactly that:
+`git push origin "$MERGED":refs/heads/<base-branch>`. If `<base-branch>`
+has moved past `$MERGED` by push time, re-run the scope check and ask.
 
 The line authorizes `git push` only. A deploy, OTA publish or release that
 usually follows still asks. The report says which line was applied and what
@@ -131,6 +143,7 @@ git checkout <base-branch>
 git pull
 # Push values of the Finish branch: line: run the scope check here, before the merge
 git merge <feature-branch>
+MERGED=$(git rev-parse <base-branch>)  # push values: push this exact commit
 
 # Verify tests on merged result
 <test command>
