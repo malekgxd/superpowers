@@ -46,11 +46,47 @@ This determines which menu to show and how cleanup works:
 ## Step 3: Determine Base Branch
 
 The base branch is whatever this work forked from — usually named in the
-plan, the conversation, or the branch's upstream. If it is not already
-known, ask: "This branch split from <your best guess> - is that correct?"
-Confirm before merging: merging into the wrong base is expensive to undo.
+plan, the conversation, the branch's upstream, or the worktree's creation
+(a worktree made from a named base knows it). Ask only when the base is
+unknown: "This branch split from <your best guess> - is that correct?"
+Merging into the wrong base is expensive to undo.
 
 ## Step 4: Present Options
+
+**Read the repo's `Finish branch:` line first.** Run
+`git show <base-branch>:CLAUDE.md` and look for one line starting
+`Finish branch:`. Values: `merge locally`, `merge and push`,
+`merge locally; ask before push`. Act on it, without the menu, only when
+all hold:
+
+- Step 1 tests passed;
+- the branch is named (detached HEAD always gets the menu);
+- this session ran the review chain on this branch's current HEAD and it
+  passed (a fresh or resumed session with no such record gets the menu).
+
+No line, a failed condition, or any other value gets the menu below.
+When acting on the line:
+
+- `merge locally`: Option 1.
+- `merge and push`: Option 1, then `git push origin <base-branch>` once.
+  A failed push is reported, never retried with force.
+- `merge locally; ask before push`: Option 1, then one question: push or not.
+
+**Push scope check** (for the two push values). Run it after `git pull`
+and before the merge, in Option 1:
+
+```bash
+git log origin/<base-branch>..<base-branch>
+```
+
+If the output is not empty or the command fails, other commits would go
+out with this branch. Stop and ask, listing those commits: push all, push
+only this branch (`git push origin <feature-branch>`; the base is not
+pushed), or don't push. Keep the feature branch until that is answered.
+
+The line authorizes `git push` only. A deploy, OTA publish or release that
+usually follows still asks. The report says which line was applied and what
+ran.
 
 **Normal repo and named-branch worktree — present exactly these 3 options:**
 
@@ -93,6 +129,7 @@ cd "$MAIN_ROOT"
 # Merge first — verify success before removing anything
 git checkout <base-branch>
 git pull
+# Push values of the Finish branch: line: run the scope check here, before the merge
 git merge <feature-branch>
 
 # Verify tests on merged result
@@ -104,7 +141,7 @@ place, and investigate — nothing has been pushed, so the merge is local
 and recoverable.
 
 Once the merged result is green: clean up the worktree (Step 6), then
-delete the branch:
+delete the branch (unless a scope-check question is still open):
 
 ```bash
 git branch -d <feature-branch>
