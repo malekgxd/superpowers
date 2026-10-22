@@ -15,6 +15,13 @@ PINS=('Ask for the base only when it is unknown'
   '- Step 1 tests passed;'
   '- the branch is a named branch (a detached HEAD always gets the menu);'
   "- this session ran the review chain on the branch's current HEAD and it passed (a fresh or resumed session with no such record gets the menu);"
+  'Act on the line only when all of these hold:'
+  'exactly one line starting'
+  '- the main checkout is already on the base branch and `git status --porcelain` there prints nothing;'
+  'Any refused checkout, pull or merge means stop and show the menu.'
+  'If the repo has no `origin` remote, skip the pull and never offer a push.'
+  'The question lists the output of `git log --oneline origin/<base-branch>..<base-branch>` and the merged commit'"'"'s sha.'
+  'and only if <base-branch> still points at that sha (else ask again)'
   '- the line is present exactly once with a recognised value.'
   'Otherwise show the menu below, unchanged.'
   'Run Option 1 (Merge Locally) on the reviewed commit, exactly as written there'
@@ -36,6 +43,13 @@ if [ -z "${FINISH_MUTANT:-}" ]; then
     cmp -s "$F" "$tmp/m.md" && { echo "MUTANT NO-OP: $s"; fail=1; continue; }
     FINISH_MUTANT=1 FINISH_SKILL="$tmp/m.md" bash "$0" >/dev/null && { echo "MUTANT PASSED: $s"; fail=1; } || true
   done
+  # Weakening mutants: the conditions must stay conjunctive.
+  sed 's/when all of these hold/when any of these hold/' "$F" >"$tmp/w.md"
+  cmp -s "$F" "$tmp/w.md" && { echo "MUTANT NO-OP: all->any"; fail=1; }
+  FINISH_MUTANT=1 FINISH_SKILL="$tmp/w.md" bash "$0" >/dev/null && { echo "MUTANT PASSED: all->any"; fail=1; }
+  sed 's/exactly one line starting/a line starting/' "$F" >"$tmp/w.md"
+  cmp -s "$F" "$tmp/w.md" && { echo "MUTANT NO-OP: exactly one"; fail=1; }
+  FINISH_MUTANT=1 FINISH_SKILL="$tmp/w.md" bash "$0" >/dev/null && { echo "MUTANT PASSED: exactly one"; fail=1; }
 fi
 [ "$fail" -eq 0 ] && echo "finishing: OK"
 exit $fail

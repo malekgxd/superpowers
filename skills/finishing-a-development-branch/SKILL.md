@@ -64,11 +64,20 @@ Act on the line only when all of these hold:
 - Step 1 tests passed;
 - the branch is a named branch (a detached HEAD always gets the menu);
 - this session ran the review chain on the branch's current HEAD and it passed (a fresh or resumed session with no such record gets the menu);
+- the main checkout is already on the base branch and `git status --porcelain` there prints nothing;
 - the line is present exactly once with a recognised value.
 
 Otherwise show the menu below, unchanged.
 
-When you act on the line, skip the menu. Run Option 1 (Merge Locally) on the reviewed commit, exactly as written there, including its test run on the merged result and its stop when they fail. A merge conflict means stop and show the menu. For `merge locally; ask before push`, then ask once whether to push the base branch, and push only after a yes, with a plain `git push origin <base-branch>`, never with force. A rejected push is reported, not retried. A deploy, OTA publish or release that usually follows still asks separately. Report which line was applied and what ran.
+When you act on the line, skip the menu. Run Option 1 (Merge Locally) on the reviewed commit, exactly as written there, including its test run on the merged result and its stop when they fail.
+Any refused checkout, pull or merge means stop and show the menu. A merge conflict means stop and show the menu.
+If the repo has no `origin` remote, skip the pull and never offer a push.
+For `merge locally; ask before push`, then ask once whether to push the base branch.
+The question lists the output of `git log --oneline origin/<base-branch>..<base-branch>` and the merged commit's sha.
+Then push only after a yes, and only if <base-branch> still points at that sha (else ask again), with a plain `git push origin <base-branch>`, never with force.
+A rejected push is reported, not retried.
+A deploy, OTA publish or release that usually follows still asks separately.
+Report which line was applied and what ran.
 
 **Normal repo and named-branch worktree — present exactly these 3 options:**
 
