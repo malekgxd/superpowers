@@ -46,228 +46,29 @@ This determines which menu to show and how cleanup works:
 ## Step 3: Determine Base Branch
 
 The base branch is whatever this work forked from — usually named in the
-plan, the conversation, the branch's upstream, or the worktree's creation
-(a worktree made from a named base knows it). Ask only when the base is
-unknown: "This branch split from <your best guess> - is that correct?"
-Merging into the wrong base is expensive to undo.
+plan, the conversation, or the branch's upstream.
+A worktree made from a named base knows it.
+Ask for the base only when it is unknown: "This branch split from <your best guess> - is that correct?"
+Confirm before merging: merging into the wrong base is expensive to undo.
 
 ## Step 4: Present Options
 
-**Read the repo's `Finish branch:` line first.** Run
-`git show <base-branch>:CLAUDE.md` and look for one line starting
-`Finish branch:`. Values: `merge locally`, `merge and push`,
-`merge locally; ask before push`. Act on it, without the menu, only when
-all hold:
+Before the menu, run `git show <base-branch>:CLAUDE.md` and look for
+exactly one line starting `Finish branch:`. Recognised values, exact match:
+
+- `merge locally`: merge and stop; do not offer a push.
+- `merge locally; ask before push`: merge, then ask once whether to push the base branch.
+
+Act on the line only when all of these hold:
 
 - Step 1 tests passed;
-- the branch is named (detached HEAD always gets the menu);
-- this session ran the review chain on `REVIEWED_OID` and it passed
-  (a fresh or resumed session with no such record gets the menu);
-- the `Finish branch:` value is one of the three recognised values above.
+- the branch is a named branch (a detached HEAD always gets the menu);
+- this session ran the review chain on the branch's current HEAD and it passed (a fresh or resumed session with no such record gets the menu);
+- the line is present exactly once with a recognised value.
 
-No line, a failed condition, or any other value gets the menu below.
-Record the exact commit from the passed review's evidence, not a later
-branch tip, at this gate:
+Otherwise show the menu below, unchanged.
 
-```bash
-REVIEWED_OID=<reviewed-commit>
-```
-
-```bash
-test "$(git rev-parse <feature-branch>)" = "$REVIEWED_OID"
-```
-
-If the feature branch no longer points at `REVIEWED_OID`, stop and ask;
-review the new tip before restarting. Keep this OID fixed through integration.
-
-When acting on the line, use Option 1 and the integration rule below.
-`merge locally` skips the push; `merge and push` pushes at g;
-`merge locally; ask before push` asks at g.
-
-**Integration rule** (steps a-g). Merge and test in temporary detached
-worktrees. The main checkout is used only for the final ff-only update at g.
-Run from the feature worktree; stop on any failed command as directed below.
-`<test command>` means the same full suite used in Step 1.
-
-- **a.** Fetch and record the remote base:
-
-  ```bash
-  git fetch origin &&
-  ORIGIN=$(git rev-parse origin/<base-branch>)
-  ```
-
-  If either command fails, stop and ask; nothing is merged yet.
-
-- **b.** Record the local base tip and enumerate `ORIGIN..<base-branch>`
-  using that fixed tip, so an answer cannot authorise a later commit:
-
-  ```bash
-  INTEGRATION_BASE=$ORIGIN &&
-  PUSH_ALL= &&
-  LOCAL_BASE=$(git rev-parse <base-branch>) &&
-  HELD=$(git rev-list "$ORIGIN".."$LOCAL_BASE")
-  ```
-
-  ```bash
-  test -z "$HELD"
-  ```
-
-  The enumeration must succeed and be empty. Otherwise stop and ask,
-  listing those commits: push all, or don't push. A failed enumeration
-  stays stopped until it succeeds; an answer cannot authorise unknown commits.
-  On "don't push", leave the branch in place. On "push all", record:
-
-  ```bash
-  INTEGRATION_BASE=$LOCAL_BASE &&
-  PUSH_ALL=$HELD
-  ```
-
-  This base and these commits are approved for both d and f; do not ask
-  again for the same commits. For `merge locally`, this approval includes
-  them locally but does not authorise a push.
-
-- **c.** Create the detached integration worktree:
-
-  ```bash
-  TMP_ROOT=$(mktemp -d) &&
-  INTEGRATION="$TMP_ROOT/integration" &&
-  git -c core.hooksPath=/dev/null worktree add --detach "$INTEGRATION" "$INTEGRATION_BASE"
-  ```
-
-  If creation fails, stop and ask. Recheck the feature before merging:
-
-  ```bash
-  test "$(git rev-parse <feature-branch>)" = "$REVIEWED_OID"
-  ```
-
-  If it changed, stop and ask for review of the new tip. Merge the recorded OID:
-
-  ```bash
-  git -C "$INTEGRATION" -c core.hooksPath=/dev/null merge --no-edit "$REVIEWED_OID"
-  ```
-
-  A conflict or any other merge failure: abort in that worktree, then the menu.
-
-  ```bash
-  git -C "$INTEGRATION" merge --abort
-  ```
-
-  If abort fails, report that too and leave the worktree for investigation.
-  Never push a merge resolved by hand.
-
-- **d.** Record and validate the result before testing:
-
-  ```bash
-  MERGED=$(git -C "$INTEGRATION" rev-parse HEAD) &&
-  PARENTS=$(git rev-list --parents -n1 "$MERGED") &&
-  { test "$MERGED" = "$REVIEWED_OID" || test "$PARENTS" = "$MERGED $INTEGRATION_BASE $REVIEWED_OID"; }
-  ```
-
-  `MERGED` must equal `REVIEWED_OID` (fast-forward) or have parents exactly
-  `INTEGRATION_BASE` and `REVIEWED_OID`, in that order. Otherwise stop and ask.
-  Independently merge those inputs again with hooks disabled and compare trees:
-
-  ```bash
-  git -c core.hooksPath=/dev/null worktree add --detach "$TMP_ROOT/check" "$INTEGRATION_BASE" &&
-  git -C "$TMP_ROOT/check" -c core.hooksPath=/dev/null merge --no-edit "$REVIEWED_OID" &&
-  EXPECTED_TREE=$(git -C "$TMP_ROOT/check" rev-parse 'HEAD^{tree}') &&
-  test "$(git rev-parse "$MERGED^{tree}")" = "$EXPECTED_TREE" &&
-  git worktree remove "$TMP_ROOT/check"
-  ```
-
-  If any validation command fails or the trees differ, stop and ask;
-  matching parents alone do not authorise merge-only content.
-
-- **e.** Check the integration checkout is still the recorded result,
-  then run the tests in that temporary worktree:
-
-  ```bash
-  test "$(git -C "$INTEGRATION" rev-parse HEAD)" = "$MERGED" &&
-  git -C "$INTEGRATION" diff --exit-code "$MERGED" -- &&
-  git -C "$INTEGRATION" diff --cached --exit-code "$MERGED" --
-  ```
-
-  ```bash
-  (cd "$INTEGRATION" && <test command>)
-  ```
-
-  ```bash
-  test "$(git -C "$INTEGRATION" rev-parse HEAD)" = "$MERGED" &&
-  git -C "$INTEGRATION" diff --exit-code "$MERGED" -- &&
-  git -C "$INTEGRATION" diff --cached --exit-code "$MERGED" --
-  ```
-
-  If the merged tests fail or the recorded HEAD or tracked tree changed,
-  stop; nothing has been pushed. A passing suite in the main checkout
-  does not satisfy this step.
-
-- **f.** Enumerate the outgoing commits and the reviewed history:
-
-  ```bash
-  OUTGOING=$(git rev-list "$ORIGIN".."$MERGED") &&
-  REVIEWED_COMMITS=$(git rev-list "$ORIGIN".."$REVIEWED_OID")
-  ```
-
-  If either enumeration fails, stop and ask. Every outgoing commit must be
-  `MERGED`, in `PUSH_ALL` from b, or in `REVIEWED_COMMITS`:
-
-  ```bash
-  EXTRAS=
-  for OID in $OUTGOING; do
-    if ! printf '%s\n' "$MERGED" "$PUSH_ALL" "$REVIEWED_COMMITS" | grep -Fx "$OID" >/dev/null; then
-      EXTRAS="$EXTRAS $OID"
-    fi
-  done
-  test -z "$EXTRAS"
-  ```
-
-  If any other commit is listed, stop and ask, listing them: push all, or
-  don't push. An answer here does not waive the review, tree or test gates.
-
-- **g.** Under `merge locally; ask before push`, ask push or not here;
-  an answer already given at b or f is that answer. `merge locally` skips
-  the push. Otherwise push the tested OID, once:
-
-  ```bash
-  git push origin "$MERGED":refs/heads/<base-branch>
-  ```
-
-  A rejected push is reported, never retried with force. Remove the temporary
-  worktree from outside it, also after a declined or rejected push:
-
-  ```bash
-  git worktree remove "$INTEGRATION" &&
-  rmdir "$TMP_ROOT"
-  ```
-
-  If removal is refused, stop and report the path; never force removal.
-  Only if the main checkout is on the base branch and clean:
-
-  ```bash
-  MAIN_BRANCH=$(git -C <main-checkout> branch --show-current) &&
-  MAIN_STATUS=$(git -C <main-checkout> status --porcelain) &&
-  test "$MAIN_BRANCH" = <base-branch> &&
-  test -z "$MAIN_STATUS"
-  ```
-
-  ```bash
-  git -C <main-checkout> -c core.hooksPath=/dev/null merge --ff-only "$MERGED"
-  ```
-
-  If the checks or fast-forward fail, leave the main checkout in place and
-  say so. For `merge locally`, or a declined push, stop and ask: the result
-  has not landed. Report `MERGED` so the result can be recovered. Never
-  switch the main checkout's branch or reset its work.
-
-On any earlier stop, keep the feature branch and report temporary worktree
-paths; remove only clean temporary worktrees, without force.
-Keep the feature branch until the push is settled (or, for local-only work,
-the ff-only update succeeded). Delete it only when no question remains and
-it still points at `REVIEWED_OID`; preserve any newer feature work.
-
-The line authorizes `git push` only. A deploy, OTA publish or release that
-usually follows still asks. The report says which line was applied and what
-ran.
+When you act on the line, skip the menu. Run Option 1 (Merge Locally) on the reviewed commit, exactly as written there, including its test run on the merged result and its stop when they fail. A merge conflict means stop and show the menu. For `merge locally; ask before push`, then ask once whether to push the base branch, and push only after a yes, with a plain `git push origin <base-branch>`, never with force. A rejected push is reported, not retried. A deploy, OTA publish or release that usually follows still asks separately. Report which line was applied and what ran.
 
 **Normal repo and named-branch worktree — present exactly these 3 options:**
 
@@ -302,23 +103,28 @@ is theirs.
 
 ### Option 1: Merge Locally
 
-Record `REVIEWED_OID` at the Step 4 gate from this session's passed review
-chain. If that review is missing, run it before integrating. A menu choice
-of Option 1 uses `merge locally`; a recognised `Finish branch:` line uses
-its stated value. All three use the integration rule, steps a-g above.
-
-Resolve `<main-checkout>` before starting (without switching its branch):
-
 ```bash
+# Get main repo root for CWD safety
 MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
+cd "$MAIN_ROOT"
+
+# Merge first — verify success before removing anything
+git checkout <base-branch>
+git pull
+git merge <feature-branch>
+
+# Verify tests on merged result
+<test command>
 ```
 
-Once the result has landed and no question remains, move outside the
-feature worktree, clean it up (Step 6), then delete the branch only if it
-still points at `REVIEWED_OID`:
+If tests fail on the merged result: stop, leave the worktree and branch in
+place, and investigate — nothing has been pushed, so the merge is local
+and recoverable.
+
+Once the merged result is green: clean up the worktree (Step 6), then
+delete the branch:
 
 ```bash
-cd "$MAIN_ROOT"
 git branch -d <feature-branch>
 ```
 
