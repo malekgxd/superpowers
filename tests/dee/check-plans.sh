@@ -10,7 +10,8 @@ grep -qF -- 'challenge the committed plan' "$F" && ok "handoff challenges the pl
 grep -qF -- 'add `Challenge: YYYY-MM-DD <verdict>` to the plan header' "$F" && ok "plan challenge recorded in the header" || bad "plan Challenge: header line unnamed"
 grep -qF -- '"holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded)' "$F" && ok "plan challenge verdict mapped to the field" || bad "plan challenge verdict mapping missing"
 grep -qF -- '**Challenge:**' "$F" && ok "plan header template carries Challenge" || bad "plan header template lacks Challenge"
-grep -qF -- 'I recommend Subagent-driven' "$F" && ok "handoff recommends Subagent-driven" || bad "handoff does not recommend Subagent-driven"
+grep -qF -- 'Plan complete and saved to' "$F" && grep -qF -- 'Building it subagent-driven' "$F" && grep -qF -- 'stops only when the plan challenge has a finding only your human partner can rule on, or the plan would change behaviour the spec states' "$F" && ok "handoff announces and starts" || bad "handoff does not announce and start"
+! grep -qF -- 'Which execution approach would you prefer?' "$F" && ! grep -qF -- 'Please review the plan.' "$F" && ok "handoff questions gone" || bad "handoff still asks"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 mk() { # mk NAME INTENT_STATUS  -> repo with committed spec+intent
   r="$T/$1"; mkdir -p "$r/docs/superpowers/intents" "$r/docs/superpowers/specs"; git -C "$r" init -q

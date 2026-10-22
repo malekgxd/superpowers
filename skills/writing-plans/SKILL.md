@@ -207,27 +207,16 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan, record its rulings in the plan under a `## Plan challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` to the plan header — map the challenge verdict to the field — "holds" → `holds`, "holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded) — and commit; the handoff waits for that.
 
-After saving and self-reviewing the plan, link it for your human partner
-to read. If they have already explicitly supplied an execution method, ask
-them to review the plan and confirm it captures what they want; wait for that
-review before implementation, then use the preserved method. Otherwise, ask
-them to review the plan and choose an execution method before implementation.
+After saving and self-reviewing the plan, committing it and recording the challenge, announce and start. Do not ask for a review and do not ask which method to use. The method is the one the design message's "Calls I made" list named: subagent-driven by default, or native when your human partner's reply said "native". A method they supplied explicitly wins.
 
-**When no execution method has already been supplied:**
+**Announce, then start:**
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Which execution approach would you prefer?**
+**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Challenge: <verdict>. Building it subagent-driven."** (for native: "Building it natively with executing-plans.")
 
-- **Subagent-driven** - A fresh subagent implements each task and a fresh reviewer checks it before the next one starts, then a whole-branch review at the end. Most thorough; costs a fresh context per task and per review.
-- **Native** - I implement every task myself in this session, the way this harness runs work, then one fresh reviewer on the most capable model checks the whole branch. Cheapest and fastest; no independent review until the end. Runs well with a mid-tier session model, since the plan carries the design.
+The handoff stops only when the plan challenge has a finding only your human partner can rule on, or the plan would change behaviour the spec states. Task order, task splits and file layout are not behaviour changes. When it stops, name the finding or the changed behaviour and ask that one question.
 
-**For this plan I recommend Subagent-driven, because <one sentence from the plan>; Native stays available when you prefer it. Does the plan capture what you want, and which approach should we use?"**
-
-**When an execution method has already been supplied:**
-
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Please review the plan. Does it capture what you want?"**
-
-**If Subagent-driven chosen:**
+**If subagent-driven:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
 
-**If Native chosen:**
+**If native:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
