@@ -71,6 +71,10 @@ already plain, say what you're hoping to learn or what the answer would
 change. A proposal they can correct, plus your reason for it, often
 beats a question.
 
+**Plain words.** Define any term the first time you use it, put your
+recommended answer first, and name no tool or process where a plain
+description works.
+
 **Show, don't tell.** Offer the visual companion (below) whenever seeing
 would help more than reading:
 
@@ -92,6 +96,20 @@ and review process. Bring what the spike taught you back into the
 conversation. A spike during an architectural brainstorm is its own
 task with its own yes; it may run before the intent commit because
 nothing it builds is kept.
+
+## Lay Out the Approaches
+
+On the bounded and architectural paths, the design message opens with
+the ways of building it. Come up with several real alternatives and drop
+the weak ones, including any that work against why they want it and any
+the existing work rules out. Present the two or three that remain, one
+line or a short bullet each, recommended first, grounding each in what
+the project actually does and saying what it trades off; say why you
+recommend the first. Then give the design for the recommended one. When
+there's genuinely one sensible way, say so and explain why the others
+don't fit. A reply naming another way gets the design redone for it.
+This is for how it gets built; for what they want, get them describing
+first.
 
 ## Red Flags While Asking
 

@@ -1,14 +1,14 @@
 # Architectural Path
 
 Part of superpowers:brainstorming. Read it before checklist step 2, and
-again before steps 4, 7, 9 and 11.
+again before steps 4, 6, 8 and 9.
 
 ## Checklist Detail
 
 1. **Explore project context** — check files, docs, recent commits
-2. **Write the intent** — before any design question, approach, or design (one purpose question may come first): write `docs/superpowers/intents/YYYY-MM-DD-<topic>.md` using the Intent template below, present it, and STOP. On an explicit yes, set `Status: accepted` and commit it. Nothing downstream starts before that commit. A heading with nothing to say gets one line saying so ("None known."); never drop a heading.
+2. **Write the intent** — before any design question, approach, or design (one purpose question may come first): write `docs/superpowers/intents/YYYY-MM-DD-<topic>.md` using the Intent template below, present it, and STOP. Its Open questions heading holds question round 1 in the round format (step 4), each question with your recommended answer; round 1 always asks their time budget for the work and any fact only they know that the design depends on. One reply ("accept, all recommended", or edits) accepts the intent and settles the round: record the rulings under Open questions, set `Status: accepted`, and commit it. Nothing downstream starts before that commit. A heading with nothing to say gets one line saying so ("None known."); never drop a heading.
 3. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See SKILL.md's Visual Companion section.
-4. **Ask in frontier rounds** — the frontier is every question whose prerequisites are already settled. Ask the whole frontier in one numbered message, each question with your recommended answer. A question that depends on another still open in this round waits for the next round. Facts are your job: anything answerable from the repo or the environment is looked up (dispatch `subagent_type: Explore`, `model: sonnet` when it is more than a grep), never asked. Done when the frontier is empty and nothing is silently assumed. Round format:
+4. **Later question rounds** — ask only questions the round 1 answers opened; none means go straight to step 5. The frontier is every question whose prerequisites are already settled. Ask the whole frontier in one numbered message, each question with your recommended answer. A question that depends on another still open in this round waits for the next round. Facts are your job: anything answerable from the repo or the environment is looked up (dispatch `subagent_type: Explore`, `model: sonnet` when it is more than a grep), never asked. Done when the frontier is empty and nothing is silently assumed. Round format:
 
    ```
    ❓ **Q1** - **<title>**: <question, options if any>
@@ -16,14 +16,12 @@ again before steps 4, 7, 9 and 11.
    ---
    ❓ **Q2** - ...
    ```
-5. **Lay out the approaches** — a message of their own: 2-3 ways with trade-offs and your recommendation; they pick one
-6. **Present design** — in sections scaled to their complexity, get user approval after each section
-7. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` with the header line `Intent: <path to the accepted intent file>`, and commit
-8. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below); also every Constraint in the intent is satisfied by the spec or explicitly waived with a reason
-9. **Builder check** — dispatch a fresh subagent with `builder-check-prompt.md`; sort its questions and bring only the "theirs" pile to your human partner (see The Written Design)
-10. **User reviews written spec** — ask user to review the spec file before proceeding
-11. **Challenge the spec** — if a `challenge` skill is installed, invoke it on the committed spec with the intent path in its brief; rule on every finding and Flag, record the rulings in the spec under a `## Challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` to the spec header (before its first `## ` heading) — map the challenge verdict to the field — "holds" → `holds`, "holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded) — commit
-12. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+5. **Present the design** — one message, in this order: the 2-3 ways to build it with trade-offs, one line or a short bullet each, recommended first; the design for the recommended way; a "Calls I made" list (decisions you took without asking, including the execution method: subagent-driven unless they answer "native"). A reply naming another way gets the design redone for it; "ok" approves. STOP until then.
+6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` with the header line `Intent: <path to the accepted intent file>`, and commit
+7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below); also every Constraint in the intent is satisfied by the spec or explicitly waived with a reason
+8. **Builder check** — dispatch a fresh subagent with `builder-check-prompt.md`; sort its questions; stop only when the "theirs" pile is not empty, and then bring only those questions, in one message headed "Questions only you can answer:" (see The Written Design: Details)
+9. **Challenge the spec** — if a `challenge` skill is installed, invoke it on the committed spec with the intent path in its brief; rule on every finding and Flag, record the rulings in the spec under a `## Challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` to the spec header (before its first `## ` heading) — map the challenge verdict to the field — "holds" → `holds`, "holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded) — commit. Stop for your human partner only when a ruling would change the intent's scope or needs a fact only they have; otherwise rule, record, and go on
+10. **Transition to implementation** — send your human partner the spec path and the "Calls I made" list in one message that does not wait (see Handing it over), then invoke writing-plans skill to create implementation plan
 
 ## Intent Template
 
@@ -46,7 +44,7 @@ Author: <who asked>. Status: draft
 <what the design must respect; the challenger checks the spec against these>
 
 ## Open questions
-<what is not yet decided; "None known." if empty>
+<question round 1 in the round format (step 4), each with your recommended answer; always their time budget for the work; on accept, the rulings>
 ```
 
 ## Process Flow
@@ -57,23 +55,21 @@ digraph brainstorming {
     "Do it; say what you did" [shape=doublecircle];
     "Present question + probe (2-3 sentences)" [shape=box];
     "Ask clarifying questions (bounded)" [shape=box];
-    "Lay out approaches; partner picks (bounded)" [shape=box];
     "Present short design in chat" [shape=box];
     "Human approves?" [shape=diamond];
     "Investigate; report recommendation" [shape=doublecircle];
     "Implement via normal workflow (no plan doc)" [shape=doublecircle];
     "Explore project context" [shape=box];
-    "Write intent; human accepts?" [shape=diamond];
+    "Write intent with question round 1;\nhuman accepts?" [shape=diamond];
     "Commit accepted intent" [shape=box];
     "Ask in frontier rounds" [shape=box];
     "Challenge the spec" [shape=box];
-    "Lay out approaches; partner picks" [shape=box];
-    "Present design sections" [shape=box];
+    "Present the design message\n(approaches, design, Calls I made)" [shape=box];
     "User approves design?" [shape=diamond];
     "Write design doc" [shape=box];
     "Spec self-review\n(fix inline)" [shape=box];
     "Builder check\n(bring 'theirs' pile)" [shape=box];
-    "User reviews spec?" [shape=diamond];
+    "Ask only the 'theirs' questions;\nupdate spec, commit" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
     "Hidden complexity? Upgrade path" [shape=box];
 
@@ -82,28 +78,25 @@ digraph brainstorming {
     "Size: quick / spike / bounded / architectural" -> "Ask clarifying questions (bounded)" [label="bounded"];
     "Size: quick / spike / bounded / architectural" -> "Explore project context" [label="architectural"];
     "Present question + probe (2-3 sentences)" -> "Human approves?";
-    "Ask clarifying questions (bounded)" -> "Lay out approaches; partner picks (bounded)";
-    "Lay out approaches; partner picks (bounded)" -> "Present short design in chat";
+    "Ask clarifying questions (bounded)" -> "Present short design in chat";
     "Present short design in chat" -> "Human approves?";
     "Human approves?" -> "Investigate; report recommendation" [label="spike: yes"];
     "Human approves?" -> "Implement via normal workflow (no plan doc)" [label="bounded: yes"];
     "Hidden complexity? Upgrade path" -> "Size: quick / spike / bounded / architectural";
-    "Explore project context" -> "Write intent; human accepts?";
-    "Write intent; human accepts?" -> "Write intent; human accepts?" [label="no, revise"];
-    "Write intent; human accepts?" -> "Commit accepted intent" [label="yes"];
-    "Commit accepted intent" -> "Ask in frontier rounds";
-    "Ask in frontier rounds" -> "Lay out approaches; partner picks";
-    "Lay out approaches; partner picks" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
+    "Explore project context" -> "Write intent with question round 1;\nhuman accepts?";
+    "Write intent with question round 1;\nhuman accepts?" -> "Write intent with question round 1;\nhuman accepts?" [label="no, revise"];
+    "Write intent with question round 1;\nhuman accepts?" -> "Commit accepted intent" [label="yes"];
+    "Commit accepted intent" -> "Ask in frontier rounds" [label="answers opened questions"];
+    "Commit accepted intent" -> "Present the design message\n(approaches, design, Calls I made)" [label="none opened"];
+    "Ask in frontier rounds" -> "Present the design message\n(approaches, design, Calls I made)";
+    "Present the design message\n(approaches, design, Calls I made)" -> "User approves design?";
+    "User approves design?" -> "Present the design message\n(approaches, design, Calls I made)" [label="another way: redo"];
     "User approves design?" -> "Write design doc" [label="yes"];
     "Write design doc" -> "Spec self-review\n(fix inline)";
     "Spec self-review\n(fix inline)" -> "Builder check\n(bring 'theirs' pile)";
-    "Builder check\n(bring 'theirs' pile)" -> "User reviews spec?";
-    "Revise spec; self-review again\n(no second builder check)" [shape=box];
-    "User reviews spec?" -> "Revise spec; self-review again\n(no second builder check)" [label="changes requested"];
-    "Revise spec; self-review again\n(no second builder check)" -> "User reviews spec?";
-    "User reviews spec?" -> "Challenge the spec" [label="approved"];
+    "Builder check\n(bring 'theirs' pile)" -> "Challenge the spec" [label="no 'theirs' questions"];
+    "Builder check\n(bring 'theirs' pile)" -> "Ask only the 'theirs' questions;\nupdate spec, commit" [label="'theirs' pile"];
+    "Ask only the 'theirs' questions;\nupdate spec, commit" -> "Challenge the spec";
     "Challenge the spec" -> "Invoke writing-plans skill" [label="rulings recorded"];
 }
 ```
@@ -113,8 +106,8 @@ digraph brainstorming {
 The subsections below serve the bounded and architectural paths (a
 spike stops at "present the probe, get a nod"). Sections from
 **Exploring approaches** onward are architectural-path depth — for
-bounded work, context, a few questions, the approaches message, and a
-short in-chat design are the whole process.
+bounded work, context, a few questions, and one short in-chat design
+message (approaches on top) are the whole process.
 
 **Understanding the idea:**
 
@@ -122,23 +115,28 @@ short in-chat design are the whole process.
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own intent → spec → challenge → plan → implementation cycle.
 - Bounded path only: ask questions one at a time to refine the idea; only one question per message - if a topic needs more exploration, break it into multiple questions
-- Architectural path: ask in frontier rounds (checklist step 4); the intent file is already committed by the time the first round is asked
+- Architectural path: the intent's Open questions carry the first question round (checklist step 2); later rounds (step 4) ask only what those answers opened
 - Open questions first; offer a short menu only when they're stuck (see The Conversation)
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**
 
-- Lay out 2-3 approaches with trade-offs in a message of their own (see Lay out the approaches)
+- Lay out 2-3 approaches with trade-offs at the top of the design message (see Lay Out the Approaches in [conversation.md](conversation.md))
 - Lead with your recommended option and explain why
 - YAGNI ruthlessly - remove unnecessary features from every approach and design
 
 **Presenting the design:**
 
-- Once you believe you understand what you're building, present the design
-- Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
+- Once you believe you understand what you're building, present the design in one message: the approaches, then the design for the recommended one, then the "Calls I made" list (checklist step 5)
+- Scale each part to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
 - Cover: architecture, components, data flow, error handling, testing
+- A reply naming another way gets the design redone for it; "ok" approves
 - Be ready to go back and clarify if something doesn't make sense
+
+**Playing it back:**
+
+- The intent is the first playback and the design message the second; no design-section chunks
+- The intent is exempt from the visual companion: present it as text, never hold it back for the offer, and put no mockup beside it. The visual offer and mockups start after the intent is accepted and committed.
 
 **Design for isolation and clarity:**
 
@@ -188,22 +186,23 @@ three piles:
 - **Theirs:** only your human partner can answer it, and the answer changes
   what gets built.
 
-Bring the "theirs" pile in one message, most important first. Update the
-document with their answers, commit, then hand it over with a short list
-of the calls you made so they can check those while reading. That's the
-only round of questions the check produces. Without a subagent tool, read
+If the "theirs" pile is empty, do not stop. Otherwise bring it in one
+message under the heading "Questions only you can answer:", most
+important first. Update the document with their answers and commit.
+That's the only round of questions the check produces. Without a subagent tool, read
 the document as that builder yourself.
 
-**User Review Gate:**
-After the builder check, ask the user to review the written spec before proceeding:
+**Handing it over:**
+The written spec is not a review stop. After the challenge rulings are committed, send one message that does not wait, then go on to writing-plans:
 
-> "Spec written and committed to `<path>`. The calls I made: <list>. Please review it and let me know if you want to make any changes before we challenge the spec and write out the implementation plan."
+> "The design is written up at `<path>`. Calls I made: <list>. I'm going on to the build plan; say if any of those calls is wrong."
 
-Wait for the user's response. If they request changes, make them and re-run the spec self-review, not the builder check. Only proceed once the user approves.
+If they answer with changes, make them and re-run the spec self-review, not the builder check.
 
 **Challenge, then implementation:**
 
 - If a `challenge` skill is installed, invoke it on the committed spec. Its brief carries four things: the one-sentence claim, the spec path, the intent path, and the settled constraints. Rule on every finding and Flag, record the rulings in the spec under a `## Challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` (`holds`, `holds-with-conditions` or `broken-ruled`) to the spec header (before its first `## ` heading), commit.
+- Stop for your human partner only when a ruling would change the intent's scope or needs a fact only they have; otherwise rule, record, and go on. An answer that changes the picked approach means sending the design message again; any smaller change goes in the spec and its "Calls I made" list.
 - Then invoke the writing-plans skill to create a detailed implementation plan
 - Do NOT invoke any other skill. challenge (when installed) and then writing-plans are the only next steps.
 
