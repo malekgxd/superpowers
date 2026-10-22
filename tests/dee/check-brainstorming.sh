@@ -21,8 +21,19 @@ NEW_PINS=('- Architectural: the human partner accepts and commits the intent, th
   '8. **Builder check** — stops only when it has questions only your human partner can answer'
   '9. **Challenge the spec**' '10. **Transition to implementation**' 'before steps 4, 6, 8 and 9'
   "the intent's Open questions hold the first question round" 'round 1 always asks their time budget for the work'
-  '- the calls you made without asking, under a "Calls I made" heading')
+  '- the calls you made without asking, under a "Calls I made" heading'
+  # Kept stops (final review I2): each must stay, deletion-tested below.
+  'present it and STOP; one reply accepts it and settles the round' 'list that names the execution method; STOP for approval'
+  "stops for your human partner only when a ruling would change the intent's scope or needs a fact only they have, otherwise rule, record, and go on"
+  'in one message that does not wait, then invoke the writing-plans skill'
+  'and any fact only they know that the design depends on. One reply accepts the intent and settles the round.')
 for s in "${NEW_PINS[@]}"; do in_skill "$s"; done
+A="$D/references/architectural.md"
+ARCH_PINS=("commit. Stop for your human partner only when a ruling would change the intent's scope or needs a fact only they have"
+  "- Stop for your human partner only when a ruling would change the intent's scope or needs a fact only they have"
+  'in one message headed "Questions only you can answer:"' 'under the heading "Questions only you can answer:"'
+  'in one message that does not wait (see Handing it over)' 'send one message that does not wait, then go on to writing-plans')
+for s in "${ARCH_PINS[@]}"; do grep -qF -- "$s" "$A" || { echo "NOT IN architectural.md: $s"; fail=1; }; done
 for s in 'a message of their own' 'approval after each section' 'User reviews written spec' 'Written-spec approval only permits' \
   'picks an approach (its own message)' 'the intent file is already committed by the time the first round is asked' \
   'again before steps 4, 7, 9 and 11' 'reviews the written implementation plan and selects its execution method' \
@@ -88,6 +99,7 @@ if [ -z "${BRAINSTORM_CHECK_MUTANT:-}" ]; then
   mut SKILL.md 's/If they opted out of the questions on the spike or\nbounded path, the skill is done and the gate goes with it; on the\narchitectural path every gate above still holds\./If they opted out of the questions, the skill is done and the gate goes with it./' 'upstream opt-out restored in HARD-GATE'
   mut SKILL.md 's/^9\. \*\*Challenge the spec\*\*.*\n//m' 'challenge step dropped from SKILL.md checklist'
   for s in "${NEW_PINS[@]}"; do export PIN="$s"; mut SKILL.md 's/\Q$ENV{PIN}\E/X/' "pin dropped: $s"; done
+  for s in "${ARCH_PINS[@]}"; do export PIN="$s"; mut references/architectural.md 's/\Q$ENV{PIN}\E/X/' "pin dropped: $s"; done
   mut SKILL.md 's/\(references\/conversation\.md\)/(references\/talk.md)/g' 'every conversation pointer broken'
   mut SKILL.md 's/before steps 4, 6, 8 and 9/before step 4/' 'architectural reload schedule cut'
   mut SKILL.md 's/ and leave the offer out//' 'asked-for brainstorming still offers to skip'

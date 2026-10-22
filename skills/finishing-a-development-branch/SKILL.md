@@ -61,40 +61,47 @@ all hold:
 
 - Step 1 tests passed;
 - the branch is named (detached HEAD always gets the menu);
-- this session ran the review chain on this branch's current HEAD and it
-  passed (a fresh or resumed session with no such record gets the menu).
+- this session ran the review chain on this branch's current HEAD and it passed
+  (a fresh or resumed session with no such record gets the menu);
+- the main checkout is already on `<base-branch>`
+  (`git -C <main-checkout> branch --show-current`); otherwise the menu, so
+  a branch another session has checked out there is never switched.
 
 No line, a failed condition, or any other value gets the menu below.
 When acting on the line:
 
 - `merge locally`: Option 1.
-- `merge and push`: Option 1, then push the recorded merge commit once
-  (see "Push the recorded commit"). A failed push is reported;
-  never retried with force.
-- `merge locally; ask before push`: Option 1, then one question: push or not.
+- `merge and push`: Option 1, merging by the push rule below.
+- `merge locally; ask before push`: Option 1, merging by the push rule below;
+  it asks push or not at step g.
 
-**Push scope check** (for the two push values). Run it after `git pull`
-and before the merge, in Option 1:
+**Push rule** (for the two push values). It replaces Option 1's plain
+merge and runs in the main checkout, in this order:
 
-```bash
-git log origin/<base-branch>..<base-branch>
-```
+- **a.** `git fetch origin`, then record `ORIGIN=$(git rev-parse origin/<base-branch>)`.
+   If either command fails, stop and ask; nothing is merged yet.
+- **b.** `git rev-list "$ORIGIN"..<base-branch>` must succeed and print nothing.
+   Otherwise stop and ask, listing those commits: push all, or don't push.
+   On "push all", those commits are also allowed at step f.
+- **c.** `git merge --ff-only "$ORIGIN"` brings the base up to the remote.
+   If the fast-forward fails, stop and ask.
+- **d.** Record `FEATURE_OID=$(git rev-parse <feature-branch>)`, then run
+   `git merge --no-edit <feature-branch>`.
+   A conflict or any other merge failure: `git merge --abort`, then the menu.
+   Never push a merge resolved by hand.
+- **e.** Record `MERGED=$(git rev-parse <base-branch>)`, then run the tests.
+   If the merged tests fail, stop; nothing has been pushed.
+- **f.** Every commit in `git rev-list "$ORIGIN".."$MERGED"` must be `$MERGED` or
+   in `git rev-list "$ORIGIN".."$FEATURE_OID"`.
+   If either command fails or any other commit is listed, stop and ask,
+   listing them: push all, or don't push.
+- **g.** `git push origin "$MERGED":refs/heads/<base-branch>`, once. A rejected push
+   is reported, never retried with force.
+   Under `merge locally; ask before push`, ask push or not here; an answer
+   already given at step b or f is that answer.
 
-If the output is not empty or the command fails, other commits would go
-out with this branch. Stop and ask, listing those commits: push all, push
-only this branch (`git push origin <feature-branch>`; the base is not
-pushed), or don't push. Keep the feature branch until that is answered.
-
-Offer "push only this branch" only if no listed commit is in the feature
-branch's history: check each with
-`git merge-base --is-ancestor <commit> <feature-branch>`. If any is, offer
-only "push all" or "don't push" and say why in one line (those commits are
-already part of this branch).
-
-**Push the recorded commit.** Right after the merge, record
-`MERGED=$(git rev-parse <base-branch>)` and push exactly that:
-`git push origin "$MERGED":refs/heads/<base-branch>`. If `<base-branch>`
-has moved past `$MERGED` by push time, re-run the scope check and ask.
+Keep the feature branch until the push is settled: delete it only after
+the push succeeded or every question above was answered.
 
 The line authorizes `git push` only. A deploy, OTA publish or release that
 usually follows still asks. The report says which line was applied and what
@@ -139,11 +146,9 @@ MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-tople
 cd "$MAIN_ROOT"
 
 # Merge first — verify success before removing anything
+# (push values of the Finish branch: line merge by the push rule, steps a-g, instead)
 git checkout <base-branch>
-git pull
-# Push values of the Finish branch: line: run the scope check here, before the merge
 git merge <feature-branch>
-MERGED=$(git rev-parse <base-branch>)  # push values: push this exact commit
 
 # Verify tests on merged result
 <test command>
@@ -154,7 +159,7 @@ place, and investigate — nothing has been pushed, so the merge is local
 and recoverable.
 
 Once the merged result is green: clean up the worktree (Step 6), then
-delete the branch (unless a scope-check question is still open):
+delete the branch (unless a push-rule question is still open):
 
 ```bash
 git branch -d <feature-branch>
