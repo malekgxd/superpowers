@@ -81,6 +81,7 @@ grep -qF -- '<workspace>/final-review.md' "$D/references/final-review.md" && gre
 grep -qF -- 'review-file path' "$D/references/fix-loop.md" && ok "fix-loop.md carries the review file" || bad "fix-loop.md lost the review file"
 for s in 'do not dispatch' 'Read it again before every round' '(references/waiting.md)'; do grep -qF -- "$s" "$D/SKILL.md" || bad "SKILL.md lost: $s"; done
 grep -qF -- 'ledger each Minor finding' "$D/SKILL.md" && ok "SKILL.md ledgers Minor findings on every review" || bad "Minor findings only ledgered inside the fix loop"
+grep -F -- '**DONE:**' "$D/SKILL.md" | grep -qF -- 'with the printed path and the review file.' && ok "DONE line dispatches the reviewer with the review file" || bad "DONE line lost the review file"
 # Negative cases: each mutant of a copy of the skill dir must fail this check; a no-op mutant fails too.
 if [ -z "${SDD_CHECK_MUTANT:-}" ]; then
   mt=$(mktemp -d); trap 'rm -rf "$mt"' EXIT

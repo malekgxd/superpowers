@@ -41,7 +41,8 @@ a handoff, files they pointed at, earlier conversation), dig in before your
 first message. Read what they referred to and the code or material it
 connects to, and keep reading until you can explain how the relevant
 parts work today and what this change would touch. Never ask what the
-project or their context already answers.
+project or their context already answers, or reopen what they've
+already decided.
 
 Then read [references/conversation.md](references/conversation.md): how it gets made, the
 ground to cover, how to ask, and when to show instead of tell.
@@ -230,10 +231,11 @@ as your proposal, with your reason. End each chunk by asking what's wrong
 or missing.
 
 Before you send a chunk, check it: does it describe something they'll
-look at, like a page, a screen, a schedule, or a printout? If so, and
-they haven't seen the visual companion offer yet, send the offer instead
-(its own message, below) and hold the chunk for the next message. Once
-they've accepted, put a mockup next to the description.
+look at, like a page, a screen, a schedule, or a printout? If so, put a
+text sketch next to the description. If the look itself is theirs to
+decide and they haven't seen the visual companion offer yet, send the
+offer instead (its own message, below) and hold the chunk for the next
+message. Once they've accepted, put a mockup next to the description.
 
 ## Anti-Pattern: "Too Simple To Need Approval"
 
