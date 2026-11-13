@@ -312,8 +312,8 @@ message is the only place the decisions you took on your human partner's
 behalf — and the findings you chose not to act on — reach them.
 
 When the final review is clean and its fixes are committed, archive this
-plan's workspace: run `bash ../subagent-driven-development/scripts/sdd-archive PLAN_FILE`.
-It moves the workspace to `.superpowers/sdd/_archive/<plan-basename>-<timestamp>/`,
+plan's workspace: run `bash <this skill's base directory>/../subagent-driven-development/scripts/sdd-archive PLAN_FILE`
+by its absolute path, from the working tree you're executing in. It moves the workspace to `.superpowers/sdd/_archive/<plan-basename>-<timestamp>/`,
 still git-ignored, so the ledger and reviews outlive the run. Never `rm -rf`
 it. Sibling directories belong to other plans; leave them alone.
 

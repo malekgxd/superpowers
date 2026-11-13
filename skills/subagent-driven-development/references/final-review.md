@@ -46,8 +46,8 @@ whatever you got wrong. A ruling that only lives in the archive was a
 decision made in secret.
 
 When the final whole-branch review is clean and its fixes are merged,
-archive this plan's workspace: run this skill's `bash scripts/sdd-archive
-PLAN_FILE`. It moves the workspace to
+archive this plan's workspace: run this skill's `bash scripts/sdd-archive PLAN_FILE`
+by its absolute path, from the working tree you're executing in. It moves the workspace to
 `.superpowers/sdd/_archive/<plan-basename>-<timestamp>/`, still git-ignored,
 so the ledger, reports and reviews outlive the run for tooling that reads
 them, while a rerun of the same plan starts from an empty workspace. Never
