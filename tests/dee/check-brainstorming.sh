@@ -26,13 +26,28 @@ NEW_PINS=('- Architectural: the human partner accepts and commits the intent, th
   'present it and STOP; one reply accepts it and settles the round' 'list that names the execution method; STOP for approval'
   "stops for your human partner only when a ruling would change the intent's scope or needs a fact only they have, otherwise rule, record, and go on"
   'in one message that does not wait, then invoke the writing-plans skill'
-  'and any fact only they know that the design depends on. One reply accepts the intent and settles the round.')
+  'and any fact only they know that the design depends on. One reply accepts the intent and settles the round.'
+  # Upstream 7.0.2 port: three first-message cases on spike and bounded, case 3 on bounded, ask only what changes the build.
+  'On the spike and bounded paths:' 'with nothing to pick from' 'ask about the one that would change it most'
+  'If nothing like that is open, end with the short design' 'a choice among ways to build it is not asked'
+  "When nothing was open from the start, that is the first message's short design, approved once."
+  '3. **Present short design in chat** — one message (when nothing was open from the start, your first message)'
+  'Process steps are always your calls' 'looking further within the project' 'Look things up; offer recon'
+  'pick a sensible place and say where'
+  'On the bounded path the short in-chat design is the playback' 'Every path except Quick ends with your human partner approving'
+  # Fix round 1: the question filter, case 1's ask-why condition, recon consent, and approvals are not filtered questions.
+  'Ask a question only when the answer would change what gets built and neither the request nor the project answers it.'
+  "If they haven't told you why they want it, even if you can guess, ask about that:"
+  "In the repo or the environment, look freely; for their own files and data outside the project, or the web, offer to look, say what you'd look for, and wait for their yes."
+  'This covers clarifying questions and routine process choices only: approval stops, intent acceptance, and the offer before recon outside the project are never yours to skip or decide.')
 for s in "${NEW_PINS[@]}"; do in_skill "$s"; done
 A="$D/references/architectural.md"
 ARCH_PINS=("commit. Stop for your human partner only when a ruling would change the intent's scope or needs a fact only they have"
   "- Stop for your human partner only when a ruling would change the intent's scope or needs a fact only they have"
   'in one message headed "Questions only you can answer:"' 'under the heading "Questions only you can answer:"'
-  'in one message that does not wait (see Handing it over)' 'send one message that does not wait, then go on to writing-plans')
+  'in one message that does not wait (see Handing it over)' 'send one message that does not wait, then go on to writing-plans'
+  '"Size: quick / spike / bounded / architectural" -> "Present short design in chat" [label="bounded, nothing open"];'
+  'pick a sensible place and say where')
 for s in "${ARCH_PINS[@]}"; do grep -qF -- "$s" "$A" || { echo "NOT IN architectural.md: $s"; fail=1; }; done
 for s in 'a message of their own' 'approval after each section' 'User reviews written spec' 'Written-spec approval only permits' \
   'picks an approach (its own message)' 'the intent file is already committed by the time the first round is asked' \
@@ -42,7 +57,9 @@ need 'Define any term the first time you use it'
 need '"Builder check\n(bring '"'"'theirs'"'"' pile)" -> "Challenge the spec"'
 # Rulings most likely to regress at the next upstream merge (Opus round 1, 7.0.1).
 gone 'Short or full, the design doc'; gone '| Size | The design doc |'
-in_skill 'no plan document |'; in_skill 'leave the offer out'; in_skill 'a single sentence with no list'; in_skill 'one question, a single sentence'
+in_skill 'no plan document |'; in_skill 'leave the offer out'
+# Upstream 7.0.2 port: bounded writes no plan; the design goes in a sensible place; the every-message one-question rule is gone.
+gone 'go on to the plan'; gone 'ask where it goes'; gone 'Each such message ends with one question'
 # Every markdown link inside references/ resolves.
 for rf in "$D"/references/*.md; do for l in $(grep -oE '\]\([^)#: ]+\.md\)' "$rf" | sed 's/^](//; s/)$//' | sort -u); do [ -f "$(dirname "$rf")/$l" ] || { echo "$(basename "$rf") points at missing $l"; fail=1; }; done; done
 for l in $(grep -oE '\(references/[a-z-]+\.md\)' "$F" | tr -d '()' | sort -u); do [ -f "$D/$l" ] || { echo "SKILL.md points at missing $l"; fail=1; }; done

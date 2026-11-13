@@ -41,7 +41,8 @@ a handoff, files they pointed at, earlier conversation), dig in before your
 first message. Read what they referred to and the code or material it
 connects to, and keep reading until you can explain how the relevant
 parts work today and what this change would touch. Never ask what the
-project or their context already answers.
+project or their context already answers, or reopen what they've
+already decided.
 
 Then read [references/conversation.md](references/conversation.md): how it gets made, the
 ground to cover, how to ask, and when to show instead of tell.
@@ -63,14 +64,23 @@ order:
      the change would touch. If you found something they may not have
      considered that would change what they're asking for or how it has
      to be built, like a constraint, a conflict, or a cheaper path, say
-     so plainly. How to build it comes later (see Lay out the
-     approaches). End with one line inviting corrections, then one
-     question about the thing their request leaves open whose answer
-     would most change what gets built: one question, a single sentence,
-     no options listed under it. Specs are often incomplete, so
-     confirm before you build on one. On the architectural path the
-     intent is this echo: write it and present it instead, with the
-     first question round under its Open questions heading.
+     so plainly. How to build it comes later, once you understand what
+     they want. End with one line inviting corrections. Specs are often
+     incomplete, so confirm before you build on one.
+     On the spike and bounded paths:
+     1. If they haven't told you why they want it, even if you can guess, ask about that:
+        one open question in their own terms, with nothing to pick from.
+     2. If they have, and their request and the project leave open something whose answer
+        would change what gets built, ask about the one that would change it most; when its
+        choices can be named, sketch each concretely, with what it trades off and which you'd
+        pick. On bounded, a choice among ways to build it is not asked; it goes at the top of
+        the short design (case 3 when nothing else is open).
+     3. If nothing like that is open, end with the short design and ask them to approve it:
+        on bounded, the full short design (Bounded checklist step 3), whose approval covers
+        approach and design; on a spike, the question and the probe.
+
+     On the architectural path the intent is this echo: write it and present it instead,
+     with the first question round under its Open questions heading.
    - **They haven't:** one open question, in their own terms, about the
      biggest thing their request leaves unsettled. Say why you're asking:
      what the answer would change about what you build. One question, a
@@ -113,7 +123,7 @@ selected path's prerequisites:
 
 - Quick: none; the request is the full description.
 - Spike: the human partner approves the question and probe.
-- Bounded: the human partner approves the short in-chat design, which carries the approaches.
+- Bounded: the human partner approves the short in-chat design, which carries the approaches. When nothing was open from the start, that is the first message's short design, approved once.
 - Architectural: the human partner accepts and commits the intent, then approves the design message; the spec is then written, builder-checked and challenged with no review stop
   (the challenge if a `challenge` skill is installed, its rulings
   recorded), then writing-plans. Approving the design message permits
@@ -161,7 +171,8 @@ human partner can override it:
   flow to change, the task is not bounded. Ask the clarifying
   questions that matter, then present a short design IN CHAT in one
   message (the approaches on top, then a few sentences to a few short
-  paragraphs of design), and STOP. Implementation
+  paragraphs of design), and STOP. When nothing was open from the
+  start, your first message is that design. Implementation
   starts only after your human partner says yes to that design — a
   bounded task's approval is as hard a gate as an architectural
   one. No spec file, no implementation plan document.
@@ -184,16 +195,23 @@ If this is really several independent projects, say so, agree on an
 order, and brainstorm them one at a time.
 
 Outside a software repo (a talk, a business, a renovation), "already
-here" means existing work your human partner has shown you. The intent
-and the written design go where they say; "commit" means saving them
+here" means existing work your human partner has shown you. For the
+intent and the written design, pick a sensible place and say where;
+your human partner's preference overrides. "Commit" means saving them
 there. writing-plans is for software only; otherwise the last step is
 handing over the approved design.
 
 ## The Conversation
 
+Ask a question only when the answer would change what gets built and neither the request nor the project answers it.
+Otherwise, state your call and your reason as a proposal they can
+correct, and move the work forward. Process steps are always your calls:
+writing things up, where files go, looking further within the project,
+how to show something. Do them and say so.
+This covers clarifying questions and routine process choices only: approval stops, intent acceptance, and the offer before recon outside the project are never yours to skip or decide.
+
 One question per message holds on spike and bounded, and on architectural until the intent is committed.
-Each such message ends with one question: a single sentence with no list
-of example answers hanging off it. The exception: the intent's Open questions hold the first question round, in the ❓/➡️ format (Checklist step 4), each with your recommended answer;
+The exception: the intent's Open questions hold the first question round, in the ❓/➡️ format (Checklist step 4), each with your recommended answer;
 round 1 always asks their time budget for the work and any fact only they know that the design depends on. One reply accepts the intent and settles the round.
 After the intent commit, the architectural path asks in later rounds
 instead (Checklist step 4). Use plain language, pitched just a little above where your human
@@ -205,43 +223,19 @@ report what you found, give them the most important findings and offer
 the rest.
 
 **Look things up; offer recon.**
-Anything answerable from the repo or the environment you look up yourself, never ask.
-Read-only exploration is always allowed. For their own files and data
-outside the project, or the web, offer to go look: say what you'd look
-for. They decide whether you go.
-
-Spikes, getting them describing, plain words, and **Lay out the
-approaches** (the top of the design message): [references/conversation.md](references/conversation.md).
+In the repo or the environment, look freely; for their own files and data outside the project, or the web, offer to look, say what you'd look for, and wait for their yes.
+Spikes, plain words, and **Lay out the approaches** (the top of the
+design message): [references/conversation.md](references/conversation.md).
 
 ## Play It Back
 
-Play back as you go. As soon as you understand one part well enough to
-describe it (what it's for and who it serves, say, or how one piece
-behaves), describe that part back in about 200-300 words, then return to
-questions about the next part. Playback and questions alternate through
-the whole conversation; the last chunk covers whatever is left. On the
-bounded path the short in-chat design is the playback; skip the
-200-300-word chunks. On the architectural path the intent and the design
-message are the playbacks, with no design-section chunks (detail in
-[references/architectural.md](references/architectural.md)).
-
-Only what they said goes in as theirs. Anything you filled in goes in
-as your proposal, with your reason. End each chunk by asking what's wrong
-or missing.
-
-Before you send a chunk, check it: does it describe something they'll
-look at, like a page, a screen, a schedule, or a printout? If so, and
-they haven't seen the visual companion offer yet, send the offer instead
-(its own message, below) and hold the chunk for the next message. Once
-they've accepted, put a mockup next to the description.
+On the bounded path the short in-chat design is the playback; on
+architectural, the intent and the design message are. Otherwise, part by
+part: [references/conversation.md](references/conversation.md).
 
 ## Anti-Pattern: "Too Simple To Need Approval"
 
-Every path except Quick ends with your human partner approving the
-required design before implementation. A bounded change may need only
-two sentences in chat. A new todo-list project is architectural and
-requires the written spec and planning handoffs. Scale the artifact to
-the selected path; complete that path's reviews before implementation.
+Every path except Quick ends with your human partner approving the required design before implementation.
 
 ## Red Flags
 
@@ -258,7 +252,7 @@ the selected path; complete that path's reviews before implementation.
 | "They said skip the questions, so the intent can go too" | On the architectural path the opt-out skips questions, not gates. Write the intent from the request and stop for acceptance. |
 | "I'll write the intent after the design, once I know what it is" | The intent is what the design is checked against. Write it first, get the yes, commit, then design. |
 | "Twelve questions, one per message, is thorough" | On the architectural path that is twelve round trips with no view of dependencies. Ask the frontier in one round with recommended answers. |
-| "I've answered their questions, so I'll write the design" | Lay out the approaches first, at the top of the design message. |
+| "I've answered their questions, so I'll write the design" | Lay out the approaches first, at the top of the design message (on bounded, when nothing was open from the start, that is your first message's short design). |
 | "I'll ask them to pick an approach first" | The approaches go at the top of the design message: one message, one approval. |
 | "They said 'sounds good' to the idea" | Approval covers what you showed them. A design you haven't shown them isn't approved. |
 
@@ -281,7 +275,7 @@ your path and complete them in order.
 **Bounded:**
 1. **Explore project context** — check files, docs, recent commits
 2. **Ask clarifying questions** — one at a time, the ones that matter
-3. **Present short design in chat** — one message: 2-3 ways with trade-offs (recommended first), the design for the recommended one (files touched, testing), and a "Calls I made" list
+3. **Present short design in chat** — one message (when nothing was open from the start, your first message): 2-3 ways with trade-offs (recommended first), the design for the recommended one (files touched, testing), and a "Calls I made" list
 4. **Get approval** — STOP and wait for an explicit yes; presenting the design and starting in the same breath is skipping the gate; a reply naming another way gets the design redone
 5. **Implement** — proceed with the normal development workflow (TDD applies); no plan document
 

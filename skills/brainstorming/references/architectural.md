@@ -76,6 +76,7 @@ digraph brainstorming {
     "Size: quick / spike / bounded / architectural" -> "Do it; say what you did" [label="quick"];
     "Size: quick / spike / bounded / architectural" -> "Present question + probe (2-3 sentences)" [label="spike"];
     "Size: quick / spike / bounded / architectural" -> "Ask clarifying questions (bounded)" [label="bounded"];
+    "Size: quick / spike / bounded / architectural" -> "Present short design in chat" [label="bounded, nothing open"];
     "Size: quick / spike / bounded / architectural" -> "Explore project context" [label="architectural"];
     "Present question + probe (2-3 sentences)" -> "Human approves?";
     "Ask clarifying questions (bounded)" -> "Present short design in chat";
@@ -106,17 +107,17 @@ digraph brainstorming {
 The subsections below serve the bounded and architectural paths (a
 spike stops at "present the probe, get a nod"). Sections from
 **Exploring approaches** onward are architectural-path depth — for
-bounded work, context, a few questions, and one short in-chat design
-message (approaches on top) are the whole process.
+bounded work, context, a few questions when anything is open, and one
+short in-chat design message (approaches on top) are the whole process.
 
 **Understanding the idea:**
 
 - Check out the current project state first (files, docs, recent commits)
 - Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
 - If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own intent → spec → challenge → plan → implementation cycle.
-- Bounded path only: ask questions one at a time to refine the idea; only one question per message - if a topic needs more exploration, break it into multiple questions
+- Bounded path only: ask questions one at a time, when anything is open, to refine the idea; only one question per message - if a topic needs more exploration, break it into multiple questions
 - Architectural path: the intent's Open questions carry the first question round (checklist step 2); later rounds (step 4) ask only what those answers opened
-- Open questions first; offer a short menu only when they're stuck (see The Conversation)
+- Open questions until you know why; then named choices with your pick (see Get them describing)
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**
@@ -157,7 +158,7 @@ message (approaches on top) are the whole process.
 
 - The spec's header carries the line `Intent: <path to the accepted intent file>` so the challenger and the plan can find it
 - Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-  - Outside a software repo, ask where it goes. User preferences for spec location override both.
+  - Outside a software repo, pick a sensible place and say where; your human partner's preference overrides both.
 - Use elements-of-style:writing-clearly-and-concisely skill if available
 - Commit the design document to git
 
