@@ -68,25 +68,19 @@ order:
      they want. End with one line inviting corrections. Specs are often
      incomplete, so confirm before you build on one.
      On the spike and bounded paths:
-     1. If they haven't told you why they want it, even if you can guess,
-        ask about that: one open question in their own terms,
-        with nothing to pick from.
-     2. If they have, and their request and the project leave open
-        something whose answer would change what gets built,
-        ask about the one that would change it most; when its choices can
-        be named, sketch each concretely, with what it trades off and
-        which you'd pick. On bounded,
-        a choice among ways to build it is not asked; it goes at the top
-        of the short design (case 3 when nothing else is open).
-     3. If nothing like that is open, end with the short design and ask
-        them to approve it. On bounded it is the full short design
-        (Bounded checklist step 3), and their approval covers the
-        approach and the design. On a spike, state the question and the
-        probe and ask for approval.
+     1. If they haven't told you why they want it, even if you can guess, ask about that:
+        one open question in their own terms, with nothing to pick from.
+     2. If they have, and their request and the project leave open something whose answer
+        would change what gets built, ask about the one that would change it most; when its
+        choices can be named, sketch each concretely, with what it trades off and which you'd
+        pick. On bounded, a choice among ways to build it is not asked; it goes at the top of
+        the short design (case 3 when nothing else is open).
+     3. If nothing like that is open, end with the short design and ask them to approve it:
+        on bounded, the full short design (Bounded checklist step 3), whose approval covers
+        approach and design; on a spike, the question and the probe.
 
-     On the architectural path the intent is this echo: write it and
-     present it instead, with the first question round under its Open
-     questions heading.
+     On the architectural path the intent is this echo: write it and present it instead,
+     with the first question round under its Open questions heading.
    - **They haven't:** one open question, in their own terms, about the
      biggest thing their request leaves unsettled. Say why you're asking:
      what the answer would change about what you build. One question, a
@@ -209,12 +203,12 @@ handing over the approved design.
 
 ## The Conversation
 
-Ask a question only when the answer would change what gets built and
-neither the request nor the project answers it. Otherwise, state your
-call and your reason as a proposal they can correct, and move the work
-forward. Process steps are always your calls: writing things up, where
-files go, looking further within the project, how to show something.
-Do them and say so.
+Ask a question only when the answer would change what gets built and neither the request nor the project answers it.
+Otherwise, state your call and your reason as a proposal they can
+correct, and move the work forward. Process steps are always your calls:
+writing things up, where files go, looking further within the project,
+how to show something. Do them and say so.
+This covers clarifying questions and routine process choices only: approval stops, intent acceptance, and the offer before recon outside the project are never yours to skip or decide.
 
 One question per message holds on spike and bounded, and on architectural until the intent is committed.
 The exception: the intent's Open questions hold the first question round, in the ❓/➡️ format (Checklist step 4), each with your recommended answer;
@@ -228,19 +222,20 @@ Be clear and concise. Lead with what matters. Avoid jargon. When you
 report what you found, give them the most important findings and offer
 the rest.
 
-**Look things up; offer recon.** That rule, spikes, getting them
-describing, plain words, and **Lay out the approaches** (the top of the
+**Look things up; offer recon.**
+In the repo or the environment, look freely; for their own files and data outside the project, or the web, offer to look, say what you'd look for, and wait for their yes.
+Spikes, plain words, and **Lay out the approaches** (the top of the
 design message): [references/conversation.md](references/conversation.md).
 
 ## Play It Back
 
-On the bounded path the short in-chat design is the playback; on the
-architectural path the intent and the design message are. Otherwise, play
-back part by part: [references/conversation.md](references/conversation.md).
+On the bounded path the short in-chat design is the playback; on
+architectural, the intent and the design message are. Otherwise, part by
+part: [references/conversation.md](references/conversation.md).
 
 ## Anti-Pattern: "Too Simple To Need Approval"
 
-Every path except Quick ends with your human partner approving the required design before implementation ([references/conversation.md](references/conversation.md)).
+Every path except Quick ends with your human partner approving the required design before implementation.
 
 ## Red Flags
 

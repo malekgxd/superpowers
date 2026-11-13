@@ -34,7 +34,12 @@ NEW_PINS=('- Architectural: the human partner accepts and commits the intent, th
   '3. **Present short design in chat** — one message (when nothing was open from the start, your first message)'
   'Process steps are always your calls' 'looking further within the project' 'Look things up; offer recon'
   'pick a sensible place and say where'
-  'On the bounded path the short in-chat design is the playback' 'Every path except Quick ends with your human partner approving')
+  'On the bounded path the short in-chat design is the playback' 'Every path except Quick ends with your human partner approving'
+  # Fix round 1: the question filter, case 1's ask-why condition, recon consent, and approvals are not filtered questions.
+  'Ask a question only when the answer would change what gets built and neither the request nor the project answers it.'
+  "If they haven't told you why they want it, even if you can guess, ask about that:"
+  "In the repo or the environment, look freely; for their own files and data outside the project, or the web, offer to look, say what you'd look for, and wait for their yes."
+  'This covers clarifying questions and routine process choices only: approval stops, intent acceptance, and the offer before recon outside the project are never yours to skip or decide.')
 for s in "${NEW_PINS[@]}"; do in_skill "$s"; done
 A="$D/references/architectural.md"
 ARCH_PINS=("commit. Stop for your human partner only when a ruling would change the intent's scope or needs a fact only they have"
