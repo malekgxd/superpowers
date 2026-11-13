@@ -35,18 +35,20 @@ for people deciding whether to stop by, I'd lead with hours and what's in
 the case today; taking orders is a different site. What do you want
 someone to do when they land on it?"
 
-**Get them describing.** Open questions come first. Their own words carry
-intent that your options can't. Offer a short menu only when they're
-stuck. When they say "just guess" or "what do you think?", propose
-something concrete.
+**Get them describing.** Until you know why they want it, ask open
+questions, with no example answers attached. Their own words carry
+intent that your options can't. Once you know why, when a decision has
+choices you can name, sketch each concretely, with what it trades off
+and which you'd pick. When they say "just guess" or "what do you think?",
+propose something concrete.
 
 **How it gets made.** Every project rests on choices about medium, tools,
 materials, and resources: the platform, programming language, and
-libraries for an app; the medium for a piece of art. Find out early which
-of those choices they want to make, which they're handing to you, and what
-they already have to work with. Someone with strong views or skills will
-want to talk it through. Someone counting on you needs sensible defaults,
-said in plain words. When there's existing work, build on what it already
+libraries for an app; the medium for a piece of art. Read from how they
+talk which of those choices they want to make. Someone who raises the how
+or asks about trade-offs wants the options with your pick. Someone who
+talks about outcomes is handing you the how: make those calls and state
+each in a line. When there's existing work, build on what it already
 uses. Any choice you make goes in the design as your call, never as
 something they agreed to.
 
@@ -71,12 +73,19 @@ already plain, say what you're hoping to learn or what the answer would
 change. A proposal they can correct, plus your reason for it, often
 beats a question.
 
+**Look things up; offer recon.**
+Anything answerable from the repo or the environment you look up yourself, never ask.
+Read-only exploration is always allowed. For their own files and data
+outside the project, or the web, offer to go look: say what you'd look
+for. They decide whether you go.
+
 **Plain words.** Define any term the first time you use it, put your
 recommended answer first, and name no tool or process where a plain
 description works.
 
-**Show, don't tell.** Offer the visual companion (below) whenever seeing
-would help more than reading:
+**Show, don't tell.** Whenever seeing would help more than reading,
+sketch it in text: a few lines of what they'd see. Offer the visual
+companion (below) when the look itself is theirs to decide:
 
 - something they'll look at: a screen, a page, a printout, a sign
 - a layout or arrangement: of a screen, a room, a schedule
@@ -103,13 +112,44 @@ On the bounded and architectural paths, the design message opens with
 the ways of building it. Come up with several real alternatives and drop
 the weak ones, including any that work against why they want it and any
 the existing work rules out. Present the two or three that remain, one
-line or a short bullet each, recommended first, grounding each in what
-the project actually does and saying what it trades off; say why you
-recommend the first. Then give the design for the recommended one. When
-there's genuinely one sensible way, say so and explain why the others
+line or a short bullet each, recommended first; sketch each concretely
+enough to picture, grounding it in what the project actually does and
+saying what it trades off; say why you recommend the first. Then give
+the design for the recommended one. When there's genuinely one sensible way, say so and explain why the others
 don't fit. A reply naming another way gets the design redone for it.
 This is for how it gets built; for what they want, get them describing
 first.
+
+## Play It Back
+
+Play back as you go. As soon as you understand one part well enough to
+describe it (what it's for and who it serves, say, or how one piece
+behaves), describe that part back in about 200-300 words, then return to
+questions about the next part. Playback and questions alternate through
+the whole conversation; the last chunk covers whatever is left. On the
+bounded path the short in-chat design is the playback; skip the
+200-300-word chunks. On the architectural path the intent and the design
+message are the playbacks, with no design-section chunks (detail in
+[architectural.md](architectural.md)).
+
+Only what they said goes in as theirs. Anything you filled in goes in
+as your proposal, with your reason. End each chunk by asking what's wrong
+or missing.
+
+Before you send a chunk, check it: does it describe something they'll
+look at, like a page, a screen, a schedule, or a printout? If so, put a
+text sketch next to the description. If the look itself is theirs to
+decide and they haven't seen the visual companion offer yet, send the
+offer instead (its own message, below) and hold the chunk for the next
+message. Once they've accepted, put a mockup next to the description.
+
+## Anti-Pattern: "Too Simple To Need Approval"
+
+Every path except Quick ends with your human partner approving the
+required design before implementation. A bounded change may need only
+two sentences in chat. A new todo-list project is architectural and
+requires the written spec and planning handoffs. Scale the artifact to
+the selected path; complete that path's reviews before implementation.
 
 ## Red Flags While Asking
 
