@@ -15,7 +15,9 @@ either line, or an inconsistent one (an `approve` with a finding above low or a 
 handled by the fix loop as written: low-severity ones are deferred to the final review and
 listed in its focus, the rest are fixed, and the re-review runs over the fix range with a focus
 that lists each open finding and asks for a verdict on each. With no such route named, dispatch
-the reviewer as before.
+the reviewer as before. Write the focus as plain text with no backticks, quotes or dollar signs,
+because the launcher passes it through a shell; name the verdict lines in words (the summary
+opens with a line Spec: pass or Spec: fail, then a line Quality: pass or Quality: fail).
 
 - The orchestrator waits for the review before the next task: on Claude Code it polls
   `/codex:status` and copies `/codex:result` into the review file; on Pi it runs
