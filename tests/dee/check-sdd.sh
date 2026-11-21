@@ -82,6 +82,13 @@ grep -qF -- 'review-file path' "$D/references/fix-loop.md" && ok "fix-loop.md ca
 for s in 'do not dispatch' 'Read it again before every round' '(references/waiting.md)'; do grep -qF -- "$s" "$D/SKILL.md" || bad "SKILL.md lost: $s"; done
 grep -qF -- 'ledger each Minor finding' "$D/SKILL.md" && ok "SKILL.md ledgers Minor findings on every review" || bad "Minor findings only ledgered inside the fix loop"
 grep -F -- '**DONE:**' "$D/SKILL.md" | grep -qF -- 'with the printed path and the review file.' && ok "DONE line dispatches the reviewer with the review file" || bad "DONE line lost the review file"
+# A review route that is not a subagent: two verdict lines in summary, reviewer as before when none is named.
+[ -f "$D/references/review-route.md" ] && ok "references/review-route.md exists" || bad "references/review-route.md missing"
+rr=$(tr -s ' \n' ' ' 2>/dev/null < "$D/references/review-route.md" || true)
+grep -qF -- 'Spec: pass|fail' <<<"$rr" && grep -qF -- 'Quality: pass|fail' <<<"$rr" && ok "review route asks for Spec and Quality lines" || bad "review-route.md lacks the Spec/Quality verdict lines"
+grep -qF -- 'With no such route named, dispatch the reviewer as before.' <<<"$rr" && ok "no route named: reviewer as before" || bad "review-route.md lacks the no-route fallback"
+grep -qF -- '(references/review-route.md)' "$D/SKILL.md" && ok "SKILL.md links references/review-route.md" || bad "SKILL.md never links references/review-route.md"
+grep -qF -- '(review-route.md)' "$D/references/final-review.md" && ok "final-review.md links review-route.md" || bad "final-review.md never links review-route.md"
 # Negative cases: each mutant of a copy of the skill dir must fail this check; a no-op mutant fails too.
 if [ -z "${SDD_CHECK_MUTANT:-}" ]; then
   mt=$(mktemp -d); trap 'rm -rf "$mt"' EXIT

@@ -261,6 +261,8 @@ report missing either verdict — spec compliance AND task quality are both
 required. Implementer self-review never replaces the task review; both are
 needed.
 
+If the routing skill names a review route that is not a subagent, read [references/review-route.md](references/review-route.md) and use it.
+
 - Hand the reviewer its diff as a file: run this skill's
   `bash scripts/review-package PLAN_FILE BASE HEAD` by its absolute path, from
   the working tree you're executing in, and pass the reviewer the file path
@@ -271,16 +273,8 @@ needed.
   call. Use the BASE you recorded before dispatching the implementer —
   never `HEAD~1`, which silently truncates multi-commit tasks. Never
   dispatch a task reviewer without a diff file.
-- **Reviewer inputs:** the task reviewer gets four paths — the same brief
-  file, the report file, the review package, and the review file it writes
-  (`…/task-N-review.md`) — plus the global constraints that bind the task.
-- The global-constraints block you hand the reviewer is its attention
-  lens. Copy the binding requirements verbatim from the plan's Global
-  Constraints section or the spec: exact values, exact formats, and the
-  stated relationships between components ("same layout as X", "matches
-  Y"). The reviewer's template already carries the process rules (YAGNI,
-  test hygiene, review method) — the constraints block is for what THIS
-  project's spec demands.
+- **Reviewer inputs:** read [references/reviewer-inputs.md](references/reviewer-inputs.md)
+  before composing the dispatch: four paths plus the global constraints.
 - Do not add open-ended directives like "check all uses" or "run race tests
   if useful" without a concrete, task-specific reason
 - Do not ask a reviewer to re-run tests the implementer already ran on the

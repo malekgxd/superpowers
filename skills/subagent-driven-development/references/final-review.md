@@ -19,6 +19,8 @@ fixed before merge. Every Declined to judge line is a ruling you make and
 ledger, exactly like a plan conflict: `Final: Ruling: <behavior the reviewer
 set aside> — <why it stands or why it is now a finding> — <cost if wrong>`.
 
+If the routing skill names a review route that is not a subagent, read [references/review-route.md](review-route.md) and use it.
+
 If the final whole-branch review returns findings, dispatch ONE fix subagent
 with the complete findings list — not one fixer per finding.
 Per-finding fixers each rebuild context and re-run suites; a real
