@@ -9,7 +9,9 @@ report, and requires the reply's `summary` to open with two lines, `Spec: pass|f
 `Quality: pass|fail`, then one `Cannot verify:` line per item it could not check. Write the full
 output to the same review file (`task-N-review.md`, `final-review.md`); re-reviews append a
 round. A task advances only when both lines read `pass` and you have resolved every `Cannot
-verify` line yourself; a reply missing either line is a failed review, run again. Findings are
+verify` line yourself, and the reply carries no finding above low severity; a reply missing
+either line, or an inconsistent one (an `approve` with a finding above low or a `fail` line, a
+`needs-attention` with no findings), is a failed review, run again. Findings are
 handled by the fix loop as written: low-severity ones are deferred to the final review and
 listed in its focus, the rest are fixed, and the re-review runs over the fix range with a focus
 that lists each open finding and asks for a verdict on each. With no such route named, dispatch

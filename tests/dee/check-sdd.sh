@@ -87,6 +87,7 @@ grep -F -- '**DONE:**' "$D/SKILL.md" | grep -qF -- 'with the printed path and th
 rr=$(tr -s ' \n' ' ' 2>/dev/null < "$D/references/review-route.md" || true)
 grep -qF -- 'Spec: pass|fail' <<<"$rr" && grep -qF -- 'Quality: pass|fail' <<<"$rr" && ok "review route asks for Spec and Quality lines" || bad "review-route.md lacks the Spec/Quality verdict lines"
 grep -qF -- 'With no such route named, dispatch the reviewer as before.' <<<"$rr" && ok "no route named: reviewer as before" || bad "review-route.md lacks the no-route fallback"
+grep -qF -- 'and the reply carries no finding above low severity' <<<"$rr" && ok "review route advances only with no finding above low" || bad "review-route.md lets a task advance past a finding above low"
 grep -qF -- '(references/review-route.md)' "$D/SKILL.md" && ok "SKILL.md links references/review-route.md" || bad "SKILL.md never links references/review-route.md"
 grep -qF -- '(review-route.md)' "$D/references/final-review.md" && ok "final-review.md links review-route.md" || bad "final-review.md never links review-route.md"
 # Negative cases: each mutant of a copy of the skill dir must fail this check; a no-op mutant fails too.
