@@ -44,12 +44,10 @@ This structure informs the task decomposition. Each task should produce self-con
 
 ## Task Right-Sizing
 
-A task is the smallest unit that carries its own test cycle and is worth a
-fresh reviewer's gate. When drawing task boundaries: fold setup,
-configuration, scaffolding, and documentation steps into the task whose
-deliverable needs them; split only where a reviewer could meaningfully
-reject one task while approving its neighbor. Each task ends with an
-independently testable deliverable.
+A task is the smallest unit with its own test cycle that one builder can
+finish alone. When drawing task boundaries: fold setup, configuration,
+scaffolding, and documentation steps into the task whose deliverable needs
+them. Each task ends with an independently testable deliverable.
 
 **Wide refactors are the exception.** A wide refactor is one mechanical
 change (rename a column, retype a shared symbol) whose blast radius fans
@@ -103,7 +101,9 @@ include this section.]
 
 ## Review Focus
 
-[The five input classes or failure modes the spec implies but no task's
+[This section is passed verbatim as the focus text of the one end review,
+so write it as plain text with no backticks, quotes or dollar signs (the
+launcher passes it through a shell). The five input classes or failure modes the spec implies but no task's
 tests exercise that are most likely to bite a person using this software
 — one line each, naming the input or condition and the behavior a
 reasonable person would expect, most likely first. The spec is a vision
@@ -111,7 +111,8 @@ document: it says what the software must do, not everything it will
 meet, and its silence on an input is not permission for that input to
 break the program. Write the list here, once, with the spec in front of
 you. Then, for each line, add the test that pins it to the task that
-owns the code, in that task's own step style.]
+owns the code, in that task's own step style. The section always ends with
+the line "Name anything outside the diff that carries the same rule, value or check and was left unchanged."]
 
 ---
 ```
@@ -125,6 +126,9 @@ owns the code, in that task's own step style.]
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
+
+**Depends on:** none
+[or `**Depends on:** Task N, Task M`]
 
 **Interfaces:**
 - Consumes: [what this task uses from earlier tasks — exact signatures]
@@ -201,26 +205,35 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
 
+**6. Independence:** Two tasks with no dependency between them must not list the same file, and their tests must not share a mutable resource (an output file, a fixture written at run time, a port, a database). If they do, add the dependency or separate the resource.
+
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Execution Handoff
 
-Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan, record its rulings in the plan under a `## Plan challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` to the plan header — map the challenge verdict to the field — "holds" → `holds`, "holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded) — and commit; the handoff waits for that.
+Before offering execution, commit the plan; then, if a `challenge` skill is installed, challenge the committed plan, record its rulings in the plan under a `## Plan challenge rulings` heading, add `Challenge: YYYY-MM-DD <verdict>` to the plan header — map the challenge verdict to the field — "holds" → `holds`, "holds with conditions" → `holds-with-conditions`, "broken" with every finding and Flag ruled → `broken-ruled` (a "broken" verdict with unruled findings may not be recorded) — and commit; the handoff waits for that. Who challenges: every committed plan goes to Astra (`gpt-6.2-astra`) through the `challenge` skill.
 
-After saving and self-reviewing the plan, committing it and recording the challenge, announce and start. Do not ask for a review and do not ask which method to use. The method is the one the design message's "Calls I made" list named: subagent-driven by default, or native when your human partner's reply said "native".
+After saving and self-reviewing the plan, committing it and recording the challenge, write the handoff and stop. Do not ask for a review and do not ask which method to use. The method is the one the design message's "Calls I made" list named: subagent-driven by default, or native when your human partner's reply said "native".
 
-**When no execution method has already been supplied:**
+The handoff stops only when the plan challenge has a finding only your human partner can rule on, or the plan would change behaviour the spec states. Task order, task splits and file layout are not behaviour changes. When it stops, name the finding or the changed behaviour and ask that one question. That stop comes before the handoff is written.
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Challenge: <verdict>. Building it subagent-driven."** (for native: "Building it natively with executing-plans.")
+Otherwise write and commit `docs/superpowers/plans/<plan-basename>-HANDOFF.md`, print `Plan complete and saved to <plan path>. Challenge: <verdict>. Handoff: <handoff path>.` and one start line for a new `claude-opus-5-5` session: `Read <handoff path> and follow it.` Then stop. It does not start building.
 
-**When an execution method has already been supplied:**
+The handoff file:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Challenge: <verdict>. Building it with the method you supplied: <method>."** Then start with that method.
+```markdown
+# Handoff: <plan title>
 
-The handoff stops only when the plan challenge has a finding only your human partner can rule on, or the plan would change behaviour the spec states. Task order, task splits and file layout are not behaviour changes. When it stops, name the finding or the changed behaviour and ask that one question.
+Plan: <path> · Spec: <path> · Intent: <path>
+Plan commit: <full sha of the commit that holds the challenged plan>
+Repo: <path> · Worktree: <path> · Base: <branch> at <sha>
+Method: subagent-driven (or: native)
+Model rule: name a model on every dispatch; an unset model runs on your own.
+Stages left: build (superpowers:subagent-driven-development, or superpowers:executing-plans when native), review (superpowers:requesting-code-review), fix (superpowers:receiving-code-review), verify (superpowers:verification-before-completion), finish (superpowers:finishing-a-development-branch).
+Stops: the four stops in subagent-driven-development.
+First act: `git diff --quiet <plan commit> -- <plan path>` exits 0, `git merge-base --is-ancestor <plan commit> HEAD` exits 0, then `gate-check` with the plan path. Anything else: stop and ask.
 
-**If subagent-driven:**
-- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+## Review Focus
 
-**If native:**
-- **REQUIRED SUB-SKILL:** Use superpowers:executing-plans
+<copied from the plan>
+```
