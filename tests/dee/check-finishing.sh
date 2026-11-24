@@ -32,8 +32,13 @@ PINS=('Ask for the base only when it is unknown'
   'never with force'
   'rejected push is reported, not retried'
   'A deploy, OTA publish or release that usually follows still asks separately.'
-  'Report which line was applied and what ran.')
+  'Report which line was applied and what ran.'
+  'Print the ready-to-merge summary before the menu or the `Finish branch:` line is acted on.'
+  '- what was not checked on the real thing.'
+  'It is information, not a gate: the options follow whatever it says.'
+  'never force-push; a rejected push stops and is reported')
 for s in "${PINS[@]}"; do need "$s"; done
+gone 'force-push only on your human partner'
 # The removed automatic-push design must stay gone.
 for s in 'merge and push' 'PUSH_ALL' 'core.hooksPath' 'push only this branch' 'REVIEWED_OID' 'INTEGRATION' 'ff-only' 'EXTRAS'; do gone "$s"; done
 if [ -z "${FINISH_MUTANT:-}" ]; then

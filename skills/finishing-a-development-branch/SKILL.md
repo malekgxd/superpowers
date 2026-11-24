@@ -53,6 +53,15 @@ Confirm before merging: merging into the wrong base is expensive to undo.
 
 ## Step 4: Present Options
 
+Print the ready-to-merge summary before the menu or the `Finish branch:` line is acted on. Four fields, one line each:
+
+- the review verdict ("not a Sol review" when the fallback reviewer ran);
+- findings fixed and findings open;
+- test counts;
+- what was not checked on the real thing.
+
+It is information, not a gate: the options follow whatever it says.
+
 Before the menu, run `git show <base-branch>:CLAUDE.md` and look for
 exactly one line starting `Finish branch:`. Recognised values, exact match:
 
@@ -249,4 +258,4 @@ place. If your platform provides a workspace-exit tool, use it.
 | "Removal refused — `--force` is just finishing the cleanup" | The refusal means files exist only in that worktree. `--force` destroys them permanently. Show your human partner and ask. |
 | "The merged-result failure is probably flaky" | A failing merged result stops everything. Branch and worktree stay put while you investigate. |
 | "The base branch is obviously main" | Confirm the fork point or ask. Merging into the wrong base is expensive to undo. |
-| "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; force-push only on your human partner's explicit request. |
+| "The push was rejected — force-push will fix it" | A rejected push means the remote moved. Investigate; never force-push; a rejected push stops and is reported. |
