@@ -33,6 +33,12 @@ done
 for s in 'A task with a commit is complete even without its ledger line' 'git log <start sha>..HEAD'; do
   grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
 done
+for s in '--first-parent' 'counts only when it changes that task'; do
+  grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
+done
+for s in 'Only tasks that could share a wave are batched' 'You still commit each task of a batch alone'; do
+  grep -qF -- "$s" "$D/references/batching.md" && ok "batching.md has: $s" || bad "batching.md lacks: $s"
+done
 grep -qF -- 'review' "$D/references/batching.md" && bad "batching.md still mentions review" || ok "batching.md is free of: review"
 for f in task-reviewer-prompt.md re-review-prompt.md references/fix-loop.md references/review-file.md references/cannot-verify.md scripts/review-package; do
   [ ! -e "$D/$f" ] && ok "$f is gone" || bad "$f still exists"
@@ -86,6 +92,8 @@ fi
 E="$(cd "$(dirname "$0")/../../skills/executing-plans" && pwd)/SKILL.md"
 grep -qiF -- "delete this plan's workspace" "$E" && bad "executing-plans still deletes the workspace" || ok "executing-plans archives the workspace"
 grep -qF -- 'sdd-archive PLAN_FILE' "$E" && ok "executing-plans finishes with sdd-archive" || bad "executing-plans never calls sdd-archive"
+grep -qF -- 'Start: <sha>' "$E" && ok "executing-plans ledger has Start" || bad "executing-plans ledger lacks: Start: <sha>"
+grep -qF -- 'Start: %s' "$(dirname "$E")/scripts/task-done" && ok "task-done writes Start" || bad "task-done ledger lacks Start"
 
 # Reachability: rules that moved to references/ must be read from SKILL.md, and live in the file that is read.
 for l in $(grep -oE '\(references/[a-z-]+\.md\)' "$D/SKILL.md" | tr -d '()' | sort -u); do [ -f "$D/$l" ] || bad "SKILL.md points at missing $l"; done

@@ -16,22 +16,25 @@ Review once, when the whole change is committed. Not per task.
 1. Read `model-routing`'s CODEX-LANE.md.
 2. Start this through the Skill tool, with the base branch the change merges into:
    `/codex:adversarial-review --base <base> --model gpt-6.2-sol -- <Review Focus text>`
+   Add `--background` right after the command name (`--wait` only for a diff of one or two files): without one of them the command stops to ask which. Read a background result with `/codex:result`.
 3. The focus text is the plan's Review Focus section verbatim, as plain text, plus any failing-combination reproducer the build ledgered.
 4. No second review by another model.
 
 ## Fallback: no Codex plugin installed
 
-Dispatch one `general-purpose` subagent on the whole branch, filling the template at [code-reviewer.md](code-reviewer.md). Use the same for the re-review.
+Dispatch one `general-purpose` subagent on the whole branch, filling the template at [code-reviewer.md](code-reviewer.md). Use the same for the re-review, with `{BASE_SHA}` set to the reviewed commit.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit (`git merge-base origin/main HEAD`)
+- `{BASE_SHA}` - Starting commit (`git merge-base <base> HEAD`, with the same `<base>` the change merges into)
 - `{HEAD_SHA}` - Ending commit (`git rev-parse HEAD`)
 
 The ready-to-merge summary then says the review was not a Sol review.
 
 Its verdicts map onto the Sol ones: `Yes` counts as `approve`; `With fixes` and `No` are findings and go to the fix stage. Every Declined to judge line is a ruling you make and ledger, as `Final: Ruling: <behaviour the reviewer set aside> — <why it stands or why it is now a finding> — <cost if wrong>`.
+
+No Codex plugin and no subagent tool: do the review in [code-reviewer.md](code-reviewer.md) yourself on the same range, as a separate pass after the last commit. Ledger `Final review: self-review (no subagent tool)`. The ready-to-merge summary says the only review was a self-review by the author, and your human partner decides whether that is enough before any merge.
 
 ## Act on feedback
 

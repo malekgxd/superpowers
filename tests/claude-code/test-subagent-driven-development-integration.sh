@@ -23,11 +23,10 @@ echo "========================================"
 echo ""
 echo "This test executes a real plan using the skill and verifies:"
 echo "  1. Plan is read once (not per task)"
-echo "  2. Full task text provided to subagents"
+echo "  2. Task brief file handed to subagents"
 echo "  3. Subagents perform self-review"
-echo "  4. Spec compliance review before code quality"
-echo "  5. Review loops when issues found"
-echo "  6. Spec reviewer reads code independently"
+echo "  4. Builders do not commit; the orchestrator commits each task"
+echo "  5. No per-task review; one end review of the whole change"
 echo ""
 echo "WARNING: This test may take 10-30 minutes to complete."
 echo ""
@@ -136,10 +135,10 @@ I want you to execute the implementation plan at docs/superpowers/plans/implemen
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
 1. Read the plan once at the beginning
-2. Provide full task text to subagents (don't make them read files)
+2. Hand each subagent its task brief file (don't make them read the whole plan)
 3. Ensure subagents do self-review before reporting
-4. Run spec compliance review before code quality review
-5. Use review loops when issues are found
+4. Commit each task yourself; builders run no git command that writes
+5. Skip per-task reviews; review the whole change once at the end
 
 Begin now. Execute the plan.
 EOF
@@ -150,10 +149,10 @@ PROMPT="Execute the implementation plan at docs/superpowers/plans/implementation
 
 IMPORTANT: Follow the skill exactly. I will be verifying that you:
 1. Read the plan once at the beginning
-2. Provide full task text to subagents (don't make them read files)
+2. Hand each subagent its task brief file (don't make them read the whole plan)
 3. Ensure subagents do self-review before reporting
-4. Run spec compliance review before code quality review
-5. Use review loops when issues are found
+4. Commit each task yourself; builders run no git command that writes
+5. Skip per-task reviews; review the whole change once at the end
 
 Begin now. Execute the plan."
 
@@ -286,10 +285,10 @@ else
 fi
 echo ""
 
-# Test 8: Check for extra features (spec compliance should catch)
-echo "Test 8: No extra features added (spec compliance)..."
+# Test 8: Check for extra features (the end review should catch them)
+echo "Test 8: No extra features added..."
 if grep -q "export function divide\|export function power\|export function subtract" "$TEST_PROJECT/src/math.js" 2>/dev/null; then
-    echo "  [WARN] Extra features found (spec review should have caught this)"
+    echo "  [WARN] Extra features found (the end review should have caught this)"
     # Not failing on this as it tests reviewer effectiveness
 else
     echo "  [PASS] No extra features added"
@@ -316,10 +315,10 @@ if [ $FAILED -eq 0 ]; then
     echo ""
     echo "The subagent-driven-development skill correctly:"
     echo "  ✓ Reads plan once at start"
-    echo "  ✓ Provides full task text to subagents"
+    echo "  ✓ Hands subagents a task brief file"
     echo "  ✓ Enforces self-review"
-    echo "  ✓ Runs spec compliance before code quality"
-    echo "  ✓ Spec reviewer verifies independently"
+    echo "  ✓ Commits each task itself (builders do not)"
+    echo "  ✓ Skips per-task review; reviews the whole change once"
     echo "  ✓ Produces working implementation"
     exit 0
 else

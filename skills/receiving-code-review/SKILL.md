@@ -15,12 +15,12 @@ Code review requires technical evaluation, not emotional performance.
 
 When the review is the end review of a plan run, the orchestrator does not fix findings itself:
 
-0. The orchestrator dispatches one fix lead: a `model: fable` subagent, foreground, handed the review output as a file. The lead does items 1 to 4 and reports; the orchestrator does items 5 and 6.
+0. The orchestrator dispatches one fix lead: a `model: fable` subagent, foreground, handed the review output as a file. The lead does items 1 to 4 and reports; the orchestrator does items 5 and 6. Where no subagent can be dispatched, you do items 1 to 4 yourself and say so in the ready-to-merge summary.
 1. Reproduce each finding with a failing test or a command. A finding that does not reproduce is ledgered with what was tried and is not fixed.
 2. Group the reproduced findings by the files they touch. Groups that share a file are merged.
 3. One fixer per group, all dispatched together by the lead, each on the least capable model that fits, named on the dispatch, each handed its findings and reproductions as a file. A single small group the lead may fix itself.
 4. A fixer does not delete, weaken or rewrite an existing test. A test that must change is changed the minimum and reported.
-5. Neither the lead nor the fixers commit. The orchestrator commits the fixes as one commit, runs the old-tests check in superpowers:verification-before-completion against that commit (a failure is fixed in a follow-up commit), then starts one re-review: the same command as the end review with `--base <reviewed commit>`.
+5. Neither the lead nor the fixers commit. The orchestrator commits the fixes as one commit, runs the old-tests check in superpowers:verification-before-completion against that commit (a failure is fixed in a follow-up commit), then starts one re-review: the same command as the end review with `--base <reviewed commit>`. Every finding left unfixed goes into the re-review's focus text with what was tried, and the ready-to-merge summary lists it as open. No finding reproduced: no fix commit and no re-review; go to item 6 with the first review's verdict.
    5a. No findings and verdict `approve` on the first review (a fallback reviewer's `Yes` counts as `approve`): this stage is skipped. No fix commit, no re-review.
 6. Verdict `approve`: go on. Anything else: stop and hand your human partner the open findings with evidence. More rounds run only on your human partner's say.
 

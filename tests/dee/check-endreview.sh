@@ -16,10 +16,12 @@ EP=('superpowers:requesting-code-review' 'superpowers:receiving-code-review' 'su
 RC=('## Findings from the end review' 'model: fable' 'Reproduce each finding with a failing test or a command'
   'Groups that share a file are merged' 'does not delete, weaken or rewrite an existing test'
   'Neither the lead nor the fixers commit' '--base <reviewed commit>'
-  'More rounds run only on your human partner'"'"'s say' 'IMPLEMENT: One item at a time, test each')
+  'More rounds run only on your human partner'"'"'s say' 'IMPLEMENT: One item at a time, test each'
+  'Where no subagent can be dispatched, you do items 1 to 4 yourself' 'Every finding left unfixed goes into the re-review'"'"'s focus text'
+  'No finding reproduced: no fix commit and no re-review')
 VC=('git diff --name-only <reviewed commit> HEAD' 'git checkout <reviewed commit> -- <files>'
   'No test file changed since the reviewed commit: say so and skip the comparison.'
-  'Compare per test, never by the summary line'
+  'Compare per test, never by the summary line' 'any path that did not exist at the reviewed commit' 'For a renamed test, check out its old path'
   'the path where the runner prints `PASS <path>` or `FAIL <path>`'
   'An identity that passed at the reviewed commit and is missing now counts as not passing'
   'one run against the real artifact' 'the manual steps are listed'

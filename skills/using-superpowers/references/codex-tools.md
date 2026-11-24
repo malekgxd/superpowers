@@ -29,8 +29,7 @@ disagree.
 - **Lifecycle:** V2 has no `close_agent`. Finished children are
   evicted automatically when slots are needed; leaving them unclosed
   costs nothing. Only V1 sessions have `close_agent` — there, close
-  reviewers when their review returns, and close each implementer
-  after its task's review passes.
+  each builder once you have accepted its report.
 - **Model names:** never copy a model name from a skill, table, or old
   session into `spawn_agent` without checking it against your current
   spawn allowlist — V2 accepts only V2-capable presets and hard-errors

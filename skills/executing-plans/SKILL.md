@@ -136,7 +136,8 @@ and the new one resumes from the same ledger.
   recollection. A ledger whose first line names a different plan file is
   another plan's progress: leave it and start your own, fresh.
 - Create the ledger with its identity as the first line:
-  `# SDD ledger — plan: <plan file path>`.
+  `# SDD ledger — plan: <plan file path>`. Its second line is
+  `Start: <sha>` with the output of `git rev-parse HEAD`.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
   if that happens, recover from `git log`.
 

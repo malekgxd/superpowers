@@ -4,7 +4,7 @@ Part of superpowers:subagent-driven-development.
 
 Never poll a wait interface with
 short timeouts, and never sit in one silent, open-ended wait either.
-While you have local work — ledger updates, packaging the next review,
+While you have local work — ledger updates, checking the next report,
 reading reports — keep working; child results arrive on their own.
 When you are genuinely idle, wait in bounded stretches (five to ten
 minutes, where your platform allows), and between stretches post one

@@ -49,7 +49,8 @@ if [ "$rc" -ne 0 ]; then
 fi
 
 last=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1) || last="(no output)"
-[ -f "$ledger" ] || printf '# SDD ledger — plan: %s\n' "$plan" > "$ledger"
+# No ledger yet: this task's BASE is the earliest commit the run can vouch for.
+[ -f "$ledger" ] || printf '# SDD ledger — plan: %s\nStart: %s\n' "$plan" "$(git -C "$repo" rev-parse "$base")" > "$ledger"
 line="Task $n: complete (commits $(git -C "$repo" rev-parse --short=7 "$base")..$(git -C "$repo" rev-parse --short=7 HEAD), tests: $cmd → $last)"
 printf '%s\n' "$line" >> "$ledger"
 echo "ledger: $line"
