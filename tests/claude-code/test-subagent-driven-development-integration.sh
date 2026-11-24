@@ -6,7 +6,7 @@
 # YAGNI enforcement subset (forbidden exports + reviewer-as-gate semantics)
 # and is stricter on that axis. This bash test additionally asserts:
 #   - >=3 git commits (initial + per-task commits, exercising SDD's
-#     commit-per-task workflow shape), one `Task <N> (<plan-basename>):`
+#     commit-per-task workflow shape), one `Task <N>:`
 #     commit per task, in order, each touching only its task's files
 #   - >=2 Claude Code subagent dispatches via Agent or Task (drill only asserts >=1),
 #     Task 1's builder before Task 2's
@@ -340,9 +340,9 @@ else
     echo "  [FAIL] Too few commits ($commit_count, expected >2)"
     FAILED=$((FAILED + 1))
 fi
-# One `Task <N> (implementation-plan):` commit per task, Task 1 first, each within its task's files
-t1_sha=$(git -C "$TEST_PROJECT" log --format=%H --grep='^Task 1 (implementation-plan):')
-t2_sha=$(git -C "$TEST_PROJECT" log --format=%H --grep='^Task 2 (implementation-plan):')
+# One `Task <N>:` commit per task, Task 1 first, each within its task's files
+t1_sha=$(git -C "$TEST_PROJECT" log --format=%H --grep='^Task 1:')
+t2_sha=$(git -C "$TEST_PROJECT" log --format=%H --grep='^Task 2:')
 if [ "$(printf '%s\n' "$t1_sha" | grep -c .)" -eq 1 ] && [ "$(printf '%s\n' "$t2_sha" | grep -c .)" -eq 1 ] \
     && git -C "$TEST_PROJECT" merge-base --is-ancestor "$t1_sha" "$t2_sha"; then
     echo "  [PASS] One commit per task, Task 1 before Task 2"
@@ -356,7 +356,7 @@ if [ "$(printf '%s\n' "$t1_sha" | grep -c .)" -eq 1 ] && [ "$(printf '%s\n' "$t2
         fi
     done
 else
-    echo "  [FAIL] Expected exactly one 'Task 1 (implementation-plan):' and one 'Task 2 (implementation-plan):' commit, in order"
+    echo "  [FAIL] Expected exactly one 'Task 1:' and one 'Task 2:' commit, in order"
     FAILED=$((FAILED + 1))
 fi
 echo ""

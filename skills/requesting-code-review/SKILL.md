@@ -37,7 +37,7 @@ Its verdicts map onto the Sol ones: `Yes` counts as `approve`; `With fixes` and 
 
 No Codex plugin and no subagent tool: do the review in [code-reviewer.md](code-reviewer.md) yourself on the same range, as a separate pass after the last commit. Ledger `Final review: self-review (no subagent tool)`. The ready-to-merge summary says the only review was a self-review by the author.
 
-After a fallback review or a self-review, nothing merges until your human partner gives an explicit go for the current HEAD: superpowers:finishing-a-development-branch shows its menu and does not act on a `Finish branch:` line.
+After a fallback review or a self-review, nothing merges until your human partner gives an explicit go for the reviewed sha the ready-to-merge summary prints: superpowers:finishing-a-development-branch shows its menu and does not act on a `Finish branch:` line.
 
 ## Act on feedback
 

@@ -15,7 +15,7 @@ for s in 'form a wave and are dispatched together in one message, as foreground 
   'A changed path that belongs to no task in the wave stops the wave' \
   'Task <N>: complete (commit <sha7>, tests <summary>)' \
   'one such task at a time' \
-  'Start: <sha>' 'Task <N> (<plan-basename>):'; do
+  'Start: <sha>' 'starting `Task <N>:`.'; do
   grep -qF -- "$s" "$D/SKILL.md" && ok "SKILL.md has: $s" || bad "SKILL.md lacks: $s"
 done
 for s in 'Never dispatch multiple implementation subagents in parallel' 'review-package' 'task-reviewer' 'fix-loop' 'Fix-loop escalation' 're-review-prompt'; do
@@ -30,15 +30,19 @@ done
 for s in 'Commit your work' 'After Review Findings' 'Commits created'; do
   grep -qF -- "$s" "$D/implementer-prompt.md" && bad "implementer-prompt.md still says: $s" || ok "implementer-prompt.md is free of: $s"
 done
-for s in 'A task with a commit is complete even without its ledger line' 'git log <start sha>..HEAD'; do
+for s in 'A ledger line means done, and nothing else does' 'git log --oneline <start sha>..HEAD'; do
   grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
 done
-for s in '--first-parent' 'carries this plan'"'"'s basename and it changes that task' 'rerun the full suite before any task that depends on it starts' 'Do not start a new end review'; do
+for s in 'Stop and ask your human partner when any of these holds' 'has no `Task <N>: complete` ledger line' 'line with no `Review done:` line after it' 'Never redispatch a task, restart a review or guess which commit is whose'; do
   grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
 done
 for s in 'Only tasks that could share a wave are batched' 'You still commit each task of a batch alone'; do
   grep -qF -- "$s" "$D/references/batching.md" && ok "batching.md has: $s" || bad "batching.md lacks: $s"
 done
+for s in 'plan-basename>)' '--first-parent' 'guard pending' 'A task with a commit is complete'; do
+  grep -qF -- "$s" <<<"$SK" && bad "skill text still says: $s" || ok "skill text is free of: $s"
+done
+grep -qF -- 'with a `Review done:` line after it, go to Finish; without one, stop and ask' "$D/references/final-review.md" && ok "final-review.md stops on a started review" || bad "final-review.md lacks the started-review rule"
 grep -qF -- 'review' "$D/references/batching.md" && bad "batching.md still mentions review" || ok "batching.md is free of: review"
 for f in task-reviewer-prompt.md re-review-prompt.md references/fix-loop.md references/review-file.md references/cannot-verify.md scripts/review-package; do
   [ ! -e "$D/$f" ] && ok "$f is gone" || bad "$f still exists"
@@ -107,7 +111,7 @@ if [ -z "${SDD_CHECK_MUTANT:-}" ]; then
   mut SKILL.md 's/\(references\/final-review\.md\)/(references\/final.md)/g' 'final-review pointer broken'
   mut SKILL.md 's/Builders run no git command that writes/Builders commit/' 'builder git-write ban dropped'
   mut references/final-review.md 's/bash scripts\/sdd-archive/sdd-archive/' 'final-review sdd-archive lost its bash'
-  mut references/resuming.md 's/A task with a commit is complete even without its ledger line/x/' 'resume-from-commits rule dropped'
+  mut references/resuming.md 's/A ledger line means done, and nothing else does/x/' 'ledger-means-done rule dropped'
 fi
 
 [ "$fail" -eq 0 ] && echo "sdd: OK"

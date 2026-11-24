@@ -55,7 +55,7 @@ Confirm before merging: merging into the wrong base is expensive to undo.
 
 Print the ready-to-merge summary before the menu or the `Finish branch:` line is acted on. Four fields, one line each:
 
-- the review verdict ("not a Sol review" when the fallback reviewer ran);
+- the review verdict and the reviewed sha, as `<verdict> on <sha>` from the ledger's `Review done:` line ("not a Sol review" when the fallback reviewer ran);
 - findings fixed and findings open;
 - test counts;
 - what was not checked on the real thing.
@@ -73,11 +73,13 @@ Act on the line only when all of these hold:
 - Step 1 tests passed;
 - the branch is a named branch (a detached HEAD always gets the menu);
 - this session ran the review chain on the branch's current HEAD and it passed (a fresh or resumed session with no such record gets the menu);
-- that review was a Sol review (after a fallback review or a self-review the menu is shown: no merge without your human partner's explicit go for the current HEAD);
+- that review was a Sol review (after a fallback review or a self-review the menu is shown: no merge without your human partner's explicit go for the reviewed sha the summary prints);
 - the main checkout is already on the base branch and `git status --porcelain` there prints nothing;
 - the line is present exactly once with a recognised value.
 
 Otherwise show the menu below, unchanged.
+
+A go covers the reviewed sha and nothing after it: before the merge or the pull-request push, `git rev-parse <feature-branch>` (`HEAD` when detached) must still print the reviewed sha; if it moved, stop and say so.
 
 When you act on the line, skip the menu. Run Option 1 (Merge Locally) on the reviewed commit, exactly as written there, including its test run on the merged result and its stop when they fail.
 Any refused checkout, pull or merge means stop and show the menu. A merge conflict means stop and show the menu.

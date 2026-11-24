@@ -130,22 +130,19 @@ and the new one resumes from the same ledger.
   directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <N>: complete` line are
-  DONE — do not redo them; resume at the first task without one. Before
-  redoing that task, read `git log <Start sha>..HEAD --first-parent` and
-  `git status`: steps whose commits already change the task's Files are not
-  redone; finish what is missing and run `task-done`, which reruns the
-  tests. A `Review:` or `Fix: reviewed` line resumes as
-  `../subagent-driven-development/references/resuming.md` says, never with a
-  second end review. Their
-  commits exist in git even when your context no longer remembers making
-  them: after compaction, trust the ledger and `git log` over your own
+  DONE — do not redo them; resume at the first task without one. A ledger line means done, and
+  nothing else does. Stop and ask your human partner when HEAD is past the last ledger line's `<head7>`,
+  when `git status` shows pending edits, or when the ledger holds a
+  `Review:`, `Fix:`, `Guard:` or `Final review:` line with no `Review done:` line after it.
+  Show them the ledger tail and `git log --oneline <Start sha>..HEAD`; never redo the work, restart a review or guess what a commit covers.
+  After compaction, trust the ledger over your own
   recollection. A ledger whose first line names a different plan file is
   another plan's progress: leave it and start your own, fresh.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`. Its second line is
   `Start: <sha>` with the output of `git rev-parse HEAD`.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch);
-  if that happens, recover from `git log`.
+  if that happens, stop and show your human partner `git log --oneline`.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the

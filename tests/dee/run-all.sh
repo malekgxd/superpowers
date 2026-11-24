@@ -3,5 +3,6 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 for t in check-brainstorming.sh check-debugging.sh check-tdd.sh check-review.sh check-plans.sh check-sdd.sh check-gate.sh check-finishing.sh check-endreview.sh; do bash "$t"; done
+bash ../old-tests/test-old-tests.sh
 python3 check-version.py
 echo "fork checks: ALL OK"

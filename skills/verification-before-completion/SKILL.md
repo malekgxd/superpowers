@@ -39,12 +39,12 @@ Skip any step = lying, not verifying
 
 Run this after the fix commit exists.
 
-1. Run the normal full suite on the fix commit. Always: the comparison below is extra and never replaces this run.
-2. `git diff --name-status -M <reviewed commit> HEAD` lists what changed. Take the test paths from both sides of every line (a rename line carries the old path and the new one). No test file changed since the reviewed commit: say so and skip the comparison.
-3. `<files>` is the test paths from step 2 that existed at the reviewed commit. Leave out of `<files>` any path that did not exist at the reviewed commit (a test the fix added: `git cat-file -e <reviewed commit>:<path>` fails for it); it runs as it is. For a renamed test, check out its old path. Nothing left in `<files>`: say so and skip the comparison.
-4. Otherwise, in a disposable worktree at the fix commit, run `git checkout <reviewed commit> -- <files>`, then the suite. Never run that checkout with nothing after `--`: it moves the worktree to the reviewed commit and the suite runs against the old code. `git rev-parse HEAD` still prints the fix commit before the suite starts.
-5. Every test that passed before still passes, or is listed with its reason. Compare per test, never by the summary line. The identity is what the runner prints for each test with its result: the test ID where the runner has one, the path where the runner prints `PASS <path>` or `FAIL <path>`, otherwise the test file and its exit code. An identity that passed at the reviewed commit and is missing now counts as not passing.
-6. Remove the disposable worktree afterwards.
+1. Run the normal full suite on the fix commit. Always: the check below is extra and never replaces this run.
+2. Run this skill's old-tests script by its absolute path, from the working tree that holds the fix commit: `bash <this skill's base directory>/scripts/old-tests <reviewed sha> <fix sha> -- <suite command>`.
+3. It prints `no test file changed` (or that the fix only added tests) and exits 0 when there is nothing to compare: say so and go on.
+4. Otherwise it runs the suite at the reviewed commit, then on the fix commit with every modified, renamed or deleted test file put back as it was (added tests stay), each in a worktree it removes itself. It prints one `STILL PASSES` or `REGRESSED` line per test that passed at the reviewed commit and exits 1 on any `REGRESSED`.
+5. Every `REGRESSED` line is fixed in a follow-up commit or listed with its reason. Never report the check as passed on the suite's summary line or on a run you did by hand instead.
+6. `-t <regex>` names the repo's test files and `-p <regex>` the runner's pass lines when the defaults miss them; `no pass lines matched` means set `-p`. Setup the suite needs outside git (installed dependencies) goes into the suite command.
 
 ## The real thing
 

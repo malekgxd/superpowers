@@ -12,25 +12,25 @@ run() {
   for s in "${gone[@]}"; do ! grep -qF -- "$s" "$f" || { echo "STILL PRESENT in $f: $s"; fail=1; }; done
 }
 EP=('superpowers:requesting-code-review' 'superpowers:receiving-code-review' 'superpowers:verification-before-completion'
-  'sdd-archive PLAN_FILE' 'End review, fixes and verification: see Final Review' 'steps whose commits already change the task')
+  'sdd-archive PLAN_FILE' 'End review, fixes and verification: see Final Review' 'when HEAD is past the last ledger line' 'never redo the work, restart a review or guess what a commit covers')
 RC=('## Findings from the end review' 'model: fable' 'Reproduce each finding with a failing test or a command'
   'Groups that share a file are merged' 'does not delete, weaken or rewrite an existing test'
   'Neither the lead nor the fixers commit' '--base <reviewed commit>'
   'More rounds run only on your human partner'"'"'s say' 'IMPLEMENT: One item at a time, test each'
   'Where no subagent can be dispatched, you do items 1 to 4 yourself' 'Every finding left unfixed goes into the re-review'"'"'s focus text'
-  'No finding reproduced: no fix commit and no re-review' 'Fix: reviewed <reviewed sha>, guard pending' 'does not close it')
-VC=('git diff --name-status -M <reviewed commit> HEAD' 'Run the normal full suite on the fix commit' 'Never run that checkout with nothing after `--`' 'git checkout <reviewed commit> -- <files>'
-  'No test file changed since the reviewed commit: say so and skip the comparison.'
-  'Compare per test, never by the summary line' 'any path that did not exist at the reviewed commit' 'For a renamed test, check out its old path'
-  'the path where the runner prints `PASS <path>` or `FAIL <path>`'
-  'An identity that passed at the reviewed commit and is missing now counts as not passing'
+  'No finding reproduced: no fix commit and no re-review' 'Fix: reviewed <reviewed sha>`, commits the fixes as one commit' 'Review done: approve on <sha>' 'does not close it')
+VC=('Run the normal full suite on the fix commit' 'scripts/old-tests <reviewed sha> <fix sha> -- <suite command>'
+  'by its absolute path, from the working tree that holds the fix commit'
+  'It prints `no test file changed`' 'exits 1 on any `REGRESSED`'
+  'Every `REGRESSED` line is fixed in a follow-up commit or listed with its reason'
   'one run against the real artifact' 'the manual steps are listed'
   'NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE')
 check_all() {
   fail=0
   run "$EPF" "${EP[@]}" -- 'review-package' 'There is no second fix pass' 'minor (deferred)'
   run "$RCF" "${RC[@]}"
-  run "$VCF" "${VC[@]}"
+  run "$VCF" "${VC[@]}" -- 'git checkout <reviewed commit> --' 'git diff --name-status'
+  [ -x "$D/verification-before-completion/scripts/old-tests" ] || { echo "MISSING: scripts/old-tests is not executable"; fail=1; }
   a=$(grep -nF -- '## Findings from the end review' "$RCF" | head -1 | cut -d: -f1)
   b=$(grep -nF -- '## The Response Pattern' "$RCF" | head -1 | cut -d: -f1)
   [ -n "$a" ] && [ -n "$b" ] && [ "$a" -lt "$b" ] || { echo "ORDER: end-review section must precede The Response Pattern"; fail=1; }

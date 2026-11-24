@@ -103,15 +103,15 @@ a ledger file, not only in todos.
   Another plan's directory is never yours to read or write.
 - Check for this plan's ledger at `<workspace>/progress.md`. If one exists,
   read [references/resuming.md](references/resuming.md) before anything
-  else: it says whose ledger it is and where to resume.
+  else: it says whose ledger it is, where to resume, and when to stop and ask.
 - Create the ledger with its identity as the first line:
   `# SDD ledger — plan: <plan file path>`. Its second line is
   `Start: <sha>` with the output of `git rev-parse HEAD`.
 - The ledger is your recovery map: the commits it names exist in git even
   when your context no longer remembers creating them. After compaction,
-  trust the ledger and `git log` over your own recollection.
+  trust the ledger over your own recollection.
 - `git clean -fdx` will destroy the workspace (it's git-ignored scratch); if
-  that happens, recover from `git log`.
+  that happens, stop and show your human partner `git log --oneline`.
 
 Read the plan once, note its context and Global Constraints, and create a
 todo per task. If the plan names a Spec, read that too: the spec is the
@@ -237,7 +237,7 @@ rush it into implementation.
 For each DONE report, confirm with `git status` and `git diff --stat` that
 the changed files are the task's Files, then commit that task alone:
 `git add -- <its files>`, then `git commit --only -- <its files>`, message
-starting `Task <N> (<plan-basename>):`, the plan file's name without `.md`.
+starting `Task <N>:`.
 
 - A changed path that belongs to no task in the wave stops the wave for a ruling.
 - A builder's test failure during a wave is rerun alone after the wave
