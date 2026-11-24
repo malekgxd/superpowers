@@ -33,7 +33,7 @@ done
 for s in 'A ledger line means done, and nothing else does' 'git log --oneline <start sha>..HEAD'; do
   grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
 done
-for s in 'Stop and ask your human partner when any of these holds' 'has no `Task <N>: complete` ledger line' 'line with no `Review done:` line after it' 'Never redispatch a task, restart a review or guess which commit is whose'; do
+for s in 'Stop and ask your human partner when any of these holds' 'prints a commit whose sha is on no ledger line, whatever its subject says' 'line with no `Review done:` line after it' 'Never redispatch a task, restart a review or guess which commit is whose'; do
   grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
 done
 for s in 'Only tasks that could share a wave are batched' 'You still commit each task of a batch alone'; do
@@ -43,6 +43,7 @@ for s in 'plan-basename>)' '--first-parent' 'guard pending' 'A task with a commi
   grep -qF -- "$s" <<<"$SK" && bad "skill text still says: $s" || ok "skill text is free of: $s"
 done
 grep -qF -- 'with a `Review done:` line after it, go to Finish; without one, stop and ask' "$D/references/final-review.md" && ok "final-review.md stops on a started review" || bad "final-review.md lacks the started-review rule"
+grep -qF -- 'Only after that line exists, archive this plan' "$D/references/final-review.md" && ok "final-review.md archives after finishing" || bad "final-review.md archives before finishing"
 grep -qF -- 'review' "$D/references/batching.md" && bad "batching.md still mentions review" || ok "batching.md is free of: review"
 for f in task-reviewer-prompt.md re-review-prompt.md references/fix-loop.md references/review-file.md references/cannot-verify.md scripts/review-package; do
   [ ! -e "$D/$f" ] && ok "$f is gone" || bad "$f still exists"

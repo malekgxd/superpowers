@@ -39,6 +39,24 @@ git mv tests/b.sh tests/b2.sh; commit 'renamed'; try
 git rm -q tests/b.sh; echo 'echo 2' > lib.sh; echo 'true' > tests/a.sh; commit 'deleted'; try
 [ $rc -eq 1 ] && has 'restore D tests/b.sh' && has 'REGRESSED     PASS tests/b.sh' && ok "deleted test: restored, regression caught" || bad "deleted test (rc=$rc)"
 
+# A fix that makes the runner skip a test while everything still exits 0.
+ALL=("${SUITE[@]}")
+SUITE=(bash -c 'for t in tests/*.sh; do grep -qxF "$t" skip 2>/dev/null && continue; bash "$t" >/dev/null 2>&1 && echo "PASS $t"; done')
+echo 'tests/b.sh' > skip; echo '[ "$(bash lib.sh)" = 1 ] # reworded' > tests/a.sh; commit 'test disappears'; try
+[ $rc -eq 1 ] && has 'suite exit: 0 at reviewed' && has ', 0 with the old tests' && has 'REGRESSED     PASS tests/b.sh' && ok "test disappears, both suites exit 0: regression caught" || bad "test disappears (rc=$rc)"
+
+# Runners that print no per-test pass line: nothing can be compared, so the result is unverified, not OK.
+echo '[ "$(bash lib.sh)" = 1 ] # reworded' > tests/a.sh; commit 'reworded'; fixsha=$(git rev-parse HEAD); git checkout -q "$base"
+unverified() { rc=0; out=$("$S" "$base" "$fixsha" -- "$@" 2>&1) || rc=$?; [ $rc -eq 3 ] && has 'old-tests: UNVERIFIED' && ! has 'old-tests: OK'; }
+unverified bash -c 'for t in tests/*.sh; do bash "$t" >/dev/null 2>&1 || exit 1; done' && ok "no pass lines: unverified, exit 3" || bad "no pass lines (rc=$rc)"
+unverified bash -c 'printf "ok  \\texample.com/pkg\\t0.012s\\nPASS\\nOK\\n"' && ok "package summary lines (go ok, bare PASS/OK) are not test identities: exit 3" || bad "package summary (rc=$rc)"
+SUITE=("${ALL[@]}")
+
+# git diff fails on two valid commits (the fix commit's tree object is gone): never "no test file changed".
+obj=$(git rev-parse "$fixsha^{tree}"); obj=".git/objects/${obj:0:2}/${obj:2}"; mv "$obj" "$T/tree.bak"
+rc=0; out=$("$S" "$base" "$fixsha" -- "${SUITE[@]}" 2>&1) || rc=$?; mv "$T/tree.bak" "$obj"
+[ $rc -eq 3 ] && has 'cannot list changes' && ! has 'no test file changed' && ok "git diff failure: cannot list changes, exit 3" || bad "git diff failure (rc=$rc)"
+
 [ "$(git worktree list | wc -l)" -eq 1 ] && ok "no disposable worktree left behind" || { out=$(git worktree list); bad "worktrees left behind"; }
 rc=0; out=$("$S" "$base" 2>&1) || rc=$?
 [ $rc -eq 2 ] && ok "usage error exits 2" || bad "usage (rc=$rc)"

@@ -43,8 +43,9 @@ Run this after the fix commit exists.
 2. Run this skill's old-tests script by its absolute path, from the working tree that holds the fix commit: `bash <this skill's base directory>/scripts/old-tests <reviewed sha> <fix sha> -- <suite command>`.
 3. It prints `no test file changed` (or that the fix only added tests) and exits 0 when there is nothing to compare: say so and go on.
 4. Otherwise it runs the suite at the reviewed commit, then on the fix commit with every modified, renamed or deleted test file put back as it was (added tests stay), each in a worktree it removes itself. It prints one `STILL PASSES` or `REGRESSED` line per test that passed at the reviewed commit and exits 1 on any `REGRESSED`.
-5. Every `REGRESSED` line is fixed in a follow-up commit or listed with its reason. Never report the check as passed on the suite's summary line or on a run you did by hand instead.
-6. `-t <regex>` names the repo's test files and `-p <regex>` the runner's pass lines when the defaults miss them; `no pass lines matched` means set `-p`. Setup the suite needs outside git (installed dependencies) goes into the suite command.
+5. Exit 3 is `UNVERIFIED`, not a pass: git could not list the changes, or the baseline run printed no per-test pass line, so nothing was compared. Fix the cause (usually `-p`) and run it again; never go on as if it had passed.
+6. Every `REGRESSED` line is fixed in a follow-up commit or listed with its reason. Never report the check as passed on the suite's summary line or on a run you did by hand instead.
+7. `-t <regex>` names the repo's test files and `-p <regex>` the runner's pass lines when the defaults miss them. A pass line names one test: a bare `PASS`/`OK` and go's per-package `ok` line never count, so make the runner print one line per test (`go test -v`). Setup the suite needs outside git (installed dependencies) goes into the suite command.
 
 ## The real thing
 

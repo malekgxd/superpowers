@@ -10,11 +10,11 @@ different plan file — or a stray ledger at the old flat path
 `.superpowers/sdd/progress.md` — is another plan's progress: leave it in
 place and start your own, fresh.
 
-A ledger line means done, and nothing else does. Before you dispatch anything, read `git log --oneline <start sha>..HEAD` (the start sha is on the ledger's `Start:` line) and `git status`.
+A ledger line means done, and nothing else does. Before you dispatch anything, read `git log --oneline <start sha>..HEAD` (the start sha is on the ledger's `Start:` line) and `git status`. The last recorded sha is the one on the ledger's last `Task <N>: complete` or `Review done:` line, the start sha when there is none.
 
 Stop and ask your human partner when any of these holds:
 
-- a `Task <N>:` commit in that log has no `Task <N>: complete` ledger line;
+- `git log --oneline <last recorded sha>..HEAD` prints a commit whose sha is on no ledger line, whatever its subject says;
 - `git status` shows pending edits;
 - the ledger holds a `Review:`, `Fix:`, `Guard:` or `Final review:` line with no `Review done:` line after it;
 - the ledger has no `Start:` line.

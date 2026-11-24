@@ -6,14 +6,17 @@
 # Runs SUITE_COMMAND twice, each in a disposable worktree: once at REVIEWED_SHA (the
 # baseline) and once at FIX_SHA with every test file the fix modified, renamed or
 # deleted put back as it was at REVIEWED_SHA (tests the fix added stay). Every
-# pass line of the baseline run must appear in the second run.
+# pass line of the baseline run must appear in the second run. A pass line is one
+# line per test that names it: a bare PASS/OK and go's per-package `ok  <tab>pkg`
+# line are summaries and never count (go needs `go test -v`).
 # Exit 0: nothing to compare, or every baseline pass line still passes. 1: a regression. 2: usage.
+# 3: unverified (git could not list the changes, or the baseline printed no pass line): not a pass.
 # shortcut: fresh worktrees hold tracked files only, so a suite that needs untracked
 # setup (node_modules, .env) must do that setup inside SUITE_COMMAND.
 set -euo pipefail
 
 test_re='(^|/)(tests?|specs?|__tests__)/|(^|/)test[-_][^/]*$|[._-](test|spec)\.[^/]+$'
-pass_re='^[[:space:]]*(--- )?(PASS|ok|OK|✓|\[PASS\])([[:space:]:]|$)|[[:space:]]PASSED([[:space:]]|$)'
+pass_re='^[[:space:]]*(--- )?(PASS|ok|OK|✓|\[PASS\])[[:space:]:]+[^[:space:]]|[[:space:]]PASSED([[:space:]]|$)'
 usage() { sed -n '4p' "$0" | sed 's/^# //' >&2; exit 2; }
 while getopts 't:p:' o; do case "$o" in t) test_re=$OPTARG ;; p) pass_re=$OPTARG ;; *) usage ;; esac; done
 shift $((OPTIND - 1))
@@ -23,6 +26,11 @@ fix=$(git rev-parse --verify -q "$2^{commit}") || { echo "old-tests: not a commi
 shift 3
 is_test() { [[ "$1" =~ $test_re ]]; }
 
+tmp=$(mktemp -d)
+cleanup() { git worktree remove --force "$tmp/reviewed" 2>/dev/null || true; git worktree remove --force "$tmp/fix" 2>/dev/null || true; rm -rf "$tmp"; }
+trap cleanup EXIT
+# to a file, not a process substitution: a failed git diff must not read as "nothing changed"
+git diff --name-status -M -z "$reviewed" "$fix" >"$tmp/diff" || { echo "old-tests: UNVERIFIED: cannot list changes between ${reviewed:0:7} and ${fix:0:7} (git diff failed)" >&2; exit 3; }
 restore=() remove=() changed=0
 while IFS= read -r -d '' st; do
   IFS= read -r -d '' a
@@ -34,13 +42,10 @@ while IFS= read -r -d '' st; do
     A) if is_test "$a"; then changed=1; echo "keep    A $a"; fi ;;
     *) if is_test "$a"; then restore+=("$a"); changed=1; echo "restore $st $a"; fi ;;
   esac
-done < <(git diff --name-status -M -z "$reviewed" "$fix")
+done <"$tmp/diff"
 [ "$changed" -eq 1 ] || { echo "old-tests: no test file changed between ${reviewed:0:7} and ${fix:0:7}; nothing to compare"; exit 0; }
 [ ${#restore[@]} -gt 0 ] || { echo "old-tests: the fix only added tests; nothing to restore, nothing to compare"; exit 0; }
 
-tmp=$(mktemp -d)
-cleanup() { git worktree remove --force "$tmp/reviewed" 2>/dev/null || true; git worktree remove --force "$tmp/fix" 2>/dev/null || true; rm -rf "$tmp"; }
-trap cleanup EXIT
 git worktree add -q --detach "$tmp/reviewed" "$reviewed"
 git worktree add -q --detach "$tmp/fix" "$fix"
 for f in ${remove[@]+"${remove[@]}"}; do rm -f -- "$tmp/fix/$f"; done
@@ -51,7 +56,7 @@ run() { # NAME: runs the suite in that worktree, prints its exit code, leaves no
   local rc=0
   (cd "$tmp/$1" && "${@:2}") >"$tmp/$1.out" 2>&1 || rc=$?
   # worktree path and durations differ between the two runs: strip them from the identity
-  { grep -E -- "$pass_re" "$tmp/$1.out" || true; } | sed -E "s#$tmp/$1#.#g; s/[[:space:]]*\(?[0-9.]+ ?m?s\)?[[:space:]]*$//" | sort -u >"$tmp/$1.pass"
+  { grep -E -- "$pass_re" "$tmp/$1.out" | grep -v -- $'^ok  \t' || true; } | sed -E "s#$tmp/$1#.#g; s/[[:space:]]*\(?[0-9.]+ ?m?s\)?[[:space:]]*$//" | sort -u >"$tmp/$1.pass"
   echo "$rc"
 }
 rc_old=$(run reviewed "$@")
@@ -61,9 +66,9 @@ bad=0
 while IFS= read -r line; do
   if grep -qxF -- "$line" "$tmp/fix.pass"; then echo "STILL PASSES  $line"; else echo "REGRESSED     $line"; bad=1; fi
 done <"$tmp/reviewed.pass"
-[ -s "$tmp/reviewed.pass" ] || echo "old-tests: no pass lines matched at the reviewed commit; comparing exit codes only"
 echo "suite exit: $rc_old at reviewed ${reviewed:0:7}, $rc_new with the old tests on fix ${fix:0:7}"
 if [ "$rc_old" -eq 0 ] && [ "$rc_new" -ne 0 ]; then bad=1; fi
 [ "$rc_old" -eq 0 ] || echo "old-tests: the suite already failed at the reviewed commit; read the lines above, the exit codes prove nothing"
-[ "$bad" -eq 0 ] && echo "old-tests: OK" || echo "old-tests: REGRESSION"
-exit "$bad"
+if [ "$bad" -ne 0 ]; then echo "old-tests: REGRESSION"; exit 1; fi
+[ -s "$tmp/reviewed.pass" ] || { echo "old-tests: UNVERIFIED: no pass lines matched at the reviewed commit, so no test can be compared; set -p to the runner's per-test pass line"; exit 3; }
+echo "old-tests: OK"

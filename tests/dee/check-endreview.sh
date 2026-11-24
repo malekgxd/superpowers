@@ -12,7 +12,8 @@ run() {
   for s in "${gone[@]}"; do ! grep -qF -- "$s" "$f" || { echo "STILL PRESENT in $f: $s"; fail=1; }; done
 }
 EP=('superpowers:requesting-code-review' 'superpowers:receiving-code-review' 'superpowers:verification-before-completion'
-  'sdd-archive PLAN_FILE' 'End review, fixes and verification: see Final Review' 'when HEAD is past the last ledger line' 'never redo the work, restart a review or guess what a commit covers')
+  'sdd-archive PLAN_FILE' 'End review, fixes and verification: see Final Review' 'when HEAD is past the last ledger line' 'never redo the work, restart a review or guess what a commit covers'
+  'no ledger line records those commits, whatever their subjects say' 'A `Review done:` line: the end review is over, never start another' 'Only after that line exists, archive')
 RC=('## Findings from the end review' 'model: fable' 'Reproduce each finding with a failing test or a command'
   'Groups that share a file are merged' 'does not delete, weaken or rewrite an existing test'
   'Neither the lead nor the fixers commit' '--base <reviewed commit>'
@@ -21,7 +22,7 @@ RC=('## Findings from the end review' 'model: fable' 'Reproduce each finding wit
   'No finding reproduced: no fix commit and no re-review' 'Fix: reviewed <reviewed sha>`, commits the fixes as one commit' 'Review done: approve on <sha>' 'does not close it')
 VC=('Run the normal full suite on the fix commit' 'scripts/old-tests <reviewed sha> <fix sha> -- <suite command>'
   'by its absolute path, from the working tree that holds the fix commit'
-  'It prints `no test file changed`' 'exits 1 on any `REGRESSED`'
+  'It prints `no test file changed`' 'exits 1 on any `REGRESSED`' 'Exit 3 is `UNVERIFIED`, not a pass'
   'Every `REGRESSED` line is fixed in a follow-up commit or listed with its reason'
   'one run against the real artifact' 'the manual steps are listed'
   'NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE')

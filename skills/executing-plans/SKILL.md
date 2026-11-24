@@ -99,8 +99,8 @@ digraph process {
     "task-done: run tests, ledger the result; mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "task-start: brief + BASE; read the brief" [label="yes"];
     "More tasks remain?" -> "End review, fixes and verification: see Final Review" [label="no"];
-    "End review, fixes and verification: see Final Review" -> "Archive this plan's workspace";
-    "Archive this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    "End review, fixes and verification: see Final Review" -> "Use superpowers:finishing-a-development-branch";
+    "Use superpowers:finishing-a-development-branch" -> "Archive this plan's workspace";
 }
 ```
 
@@ -131,7 +131,7 @@ and the new one resumes from the same ledger.
 - Check for this plan's ledger at `<workspace>/progress.md`. If its first
   line names your plan file, tasks with a `Task <N>: complete` line are
   DONE — do not redo them; resume at the first task without one. A ledger line means done, and
-  nothing else does. Stop and ask your human partner when HEAD is past the last ledger line's `<head7>`,
+  nothing else does. Stop and ask your human partner when HEAD is past the last ledger line's `<head7>` or `Review done:` sha (the `Start:` sha when there is none): no ledger line records those commits, whatever their subjects say,
   when `git status` shows pending edits, or when the ledger holds a
   `Review:`, `Fix:`, `Guard:` or `Final review:` line with no `Review done:` line after it.
   Show them the ledger tail and `git log --oneline <Start sha>..HEAD`; never redo the work, restart a review or guess what a commit covers.
@@ -249,23 +249,23 @@ mark the todo complete and take the next task.
 
 ## Final Review
 
-When every task is complete, use superpowers:requesting-code-review, then superpowers:receiving-code-review, then superpowers:verification-before-completion, then collect the rulings, archive the workspace, and use superpowers:finishing-a-development-branch.
+When every task is complete, read the ledger first. A `Review done:` line: the end review is over, never start another; go to Finish. A `Review:`, `Fix:`, `Guard:` or `Final review:` line with no `Review done:` after it: stop and ask, as Setup says. Neither: use superpowers:requesting-code-review, then superpowers:receiving-code-review, then superpowers:verification-before-completion, then Finish.
 
 ## Finish
 
-Before you archive anything, collect every ledger line containing
+First collect every ledger line containing
 `Ruling:` into your final message under "Rulings I made", in the order you
 made them, each with what it costs if wrong. The list is exhaustive. Your
 final message is the only place the decisions you took on your human
 partner's behalf reach them.
 
-When the end review is done and its fixes are committed, archive this
-plan's workspace: run `bash <this skill's base directory>/../subagent-driven-development/scripts/sdd-archive PLAN_FILE`
+Then use superpowers:finishing-a-development-branch while the ledger is still active: it reads the reviewed sha from the `Review done:` line. Ledger its outcome as `Finish: <what was done> on <sha>`.
+
+Only after that line exists, archive this
+plan's workspace (when finishing removed the worktree, the workspace went with it and nothing is left to archive): run `bash <this skill's base directory>/../subagent-driven-development/scripts/sdd-archive PLAN_FILE`
 by its absolute path, from the working tree you're executing in. It moves the workspace to `.superpowers/sdd/_archive/<plan-basename>-<timestamp>/`,
 still git-ignored, so the ledger and reviews outlive the run. Never `rm -rf`
 it. Sibling directories belong to other plans; leave them alone.
-
-Use superpowers:finishing-a-development-branch.
 
 ## Common Rationalizations
 

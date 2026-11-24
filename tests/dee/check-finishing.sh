@@ -39,7 +39,9 @@ PINS=('Ask for the base only when it is unknown'
   'Print the ready-to-merge summary before the menu or the `Finish branch:` line is acted on.'
   '- what was not checked on the real thing.'
   'It is information, not a gate: the options follow whatever it says.'
-  'never force-push; a rejected push stops and is reported')
+  'never force-push; a rejected push stops and is reported'
+  'git merge <reviewed sha>'
+  'git push origin <reviewed sha>:refs/heads/<feature-branch>')
 for s in "${PINS[@]}"; do need "$s"; done
 gone 'force-push only on your human partner'
 # The removed automatic-push design must stay gone.

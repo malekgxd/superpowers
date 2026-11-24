@@ -79,7 +79,7 @@ Act on the line only when all of these hold:
 
 Otherwise show the menu below, unchanged.
 
-A go covers the reviewed sha and nothing after it: before the merge or the pull-request push, `git rev-parse <feature-branch>` (`HEAD` when detached) must still print the reviewed sha; if it moved, stop and say so.
+A go covers the reviewed sha and nothing after it: before the merge or the pull-request push, `git rev-parse <feature-branch>` (`HEAD` when detached) must still print the reviewed sha; if it moved, stop and say so. The merge and the push then name that sha, not the branch or `HEAD`; with no review on record the sha is the one `git rev-parse` just printed.
 
 When you act on the line, skip the menu. Run Option 1 (Merge Locally) on the reviewed commit, exactly as written there, including its test run on the merged result and its stop when they fail.
 Any refused checkout, pull or merge means stop and show the menu. A merge conflict means stop and show the menu.
@@ -132,7 +132,7 @@ cd "$MAIN_ROOT"
 # Merge first — verify success before removing anything
 git checkout <base-branch>
 git pull
-git merge <feature-branch>
+git merge <reviewed sha>   # the sha itself, never the branch name: the ref can move after the check
 
 # Verify tests on merged result
 <test command>
@@ -152,9 +152,9 @@ git branch -d <feature-branch>
 ### Option 2: Push and Create PR
 
 ```bash
-git push -u origin <feature-branch>
+git push origin <reviewed sha>:refs/heads/<feature-branch>
 # From a detached HEAD, name the new branch on the remote:
-# git push origin HEAD:refs/heads/<new-branch>
+# git push origin <reviewed sha>:refs/heads/<new-branch>
 ```
 
 Then create the pull/merge request against <base-branch> with the forge's
