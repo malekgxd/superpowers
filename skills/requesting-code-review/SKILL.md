@@ -1,76 +1,44 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when the whole change is committed and needs its one review before merge
 ---
 
 # Requesting Code Review
 
-Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history.
+One review of the whole change, by Sol, before merge. The reviewer sees the committed branch, never your session's history.
 
-**Core principle:** Review early, review often.
+## When
 
-## When to Request Review
+Review once, when the whole change is committed. Not per task.
 
-**Mandatory:**
-- After each task in subagent-driven development
-- After completing major feature
-- Before merge to main
+## How
 
-**Optional but valuable:**
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
-- After fixing complex bug
+1. Read `model-routing`'s CODEX-LANE.md.
+2. Start this through the Skill tool, with the base branch the change merges into:
+   `/codex:adversarial-review --base <base> --model gpt-6.2-sol -- <Review Focus text>`
+3. The focus text is the plan's Review Focus section verbatim, as plain text, plus any failing-combination reproducer the build ledgered.
+4. No second review by another model.
 
-## How to Request
+## Fallback: no Codex plugin installed
 
-**1. Get git SHAs:**
-```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or: git merge-base origin/main HEAD
-HEAD_SHA=$(git rev-parse HEAD)
-```
-
-**2. Dispatch code reviewer subagent:**
-
-Dispatch a `general-purpose` subagent, filling the template at [code-reviewer.md](code-reviewer.md)
+Dispatch one `general-purpose` subagent on the whole branch, filling the template at [code-reviewer.md](code-reviewer.md). Use the same for the re-review.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
+- `{BASE_SHA}` - Starting commit (`git merge-base origin/main HEAD`)
+- `{HEAD_SHA}` - Ending commit (`git rev-parse HEAD`)
 
-**3. Act on feedback:**
+The ready-to-merge summary then says the review was not a Sol review.
+
+Its verdicts map onto the Sol ones: `Yes` counts as `approve`; `With fixes` and `No` are findings and go to the fix stage. Every Declined to judge line is a ruling you make and ledger, as `Final: Ruling: <behaviour the reviewer set aside> — <why it stands or why it is now a finding> — <cost if wrong>`.
+
+## Act on feedback
+
 - Fix Critical issues immediately
-- Fix Important issues before proceeding
+- Fix Important issues before merge
 - Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
-
-## Example
-
-```
-[Just completed Task 2: Add verification function]
-
-You: Let me request code review before proceeding.
-
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | cut -d' ' -f1)
-HEAD_SHA=$(git rev-parse HEAD)
-
-[Dispatch code reviewer subagent]
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
+- Push back if the reviewer is wrong (with reasoning)
 
 ## Common Rationalizations
 
