@@ -83,9 +83,8 @@ digraph process {
 
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Final whole-branch review (fresh reviewer if you have one)" [shape=box];
-    "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" [shape=box];
-    "Final review clean: archive this plan's workspace" [shape=box];
+    "End review, fixes and verification: see Final Review" [shape=box];
+    "Archive this plan's workspace" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Setup: worktree, workspace + ledger, read plan + spec, pre-flight scan" -> "task-start: brief + BASE; read the brief";
@@ -99,10 +98,9 @@ digraph process {
     "Completion contract met?" -> "task-done: run tests, ledger the result; mark todo complete" [label="yes"];
     "task-done: run tests, ledger the result; mark todo complete" -> "More tasks remain?";
     "More tasks remain?" -> "task-start: brief + BASE; read the brief" [label="yes"];
-    "More tasks remain?" -> "Final whole-branch review (fresh reviewer if you have one)" [label="no"];
-    "Final whole-branch review (fresh reviewer if you have one)" -> "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger";
-    "Re-grade, then: Critical/Important → ONE fix pass, each fix RED→GREEN + green suite; Minor → ledger" -> "Final review clean: archive this plan's workspace";
-    "Final review clean: archive this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
+    "More tasks remain?" -> "End review, fixes and verification: see Final Review" [label="no"];
+    "End review, fixes and verification: see Final Review" -> "Archive this plan's workspace";
+    "Archive this plan's workspace" -> "Use superpowers:finishing-a-development-branch";
 }
 ```
 
@@ -247,71 +245,17 @@ mark the todo complete and take the next task.
 
 ## Final Review
 
-Run `../subagent-driven-development/scripts/review-package PLAN_FILE MERGE_BASE HEAD`
-by its absolute path, from the working tree you're executing in (MERGE_BASE = the commit the branch started from, e.g.
-`git merge-base main HEAD`) and review from the file it prints.
-
-**With a subagent tool:** dispatch the reviewer on the most capable
-available model — the whole-branch review is a judgment task — using
-superpowers:requesting-code-review's
-[code-reviewer.md](../requesting-code-review/code-reviewer.md), with the
-package path, the plan and spec paths, the plan's Review Focus section
-verbatim if it has one (the input classes and failure modes the plan's
-tests do not exercise — the reviewer checks each deliberately), and a
-pointer to the ledger's `Ruling:` lines so it can weigh the calls you
-made. Specify the model
-explicitly; an omitted model inherits the session's, which may not be the
-most capable. This is the one fresh context the whole run buys. Do not
-skip it, and do not replace it with your own read of the diff.
-
-**Without a subagent tool:** read code-reviewer.md and perform that review
-yourself against the package, as a separate pass after the last task's
-ledger line. Write `Final review: self-review (no subagent tool)` to the
-ledger, and say so in your final message: a self-review by the author is
-weaker than a fresh reviewer, and your human partner decides whether that
-is enough before merge.
-
-Sort the findings before you act on any of them. The reviewer's severity
-labels are advice; the gate is yours. Its "Declined to judge" list is
-yours too: every line there is a ruling you make and ledger, exactly like
-a plan conflict — `Final: Ruling: <behavior the reviewer set aside> —
-<what a reasonable person using this software gets, and why that stands
-or why it is now a finding> — <cost if wrong>`. Re-grade first, by effect: the
-spec is a vision document, and a finding's grade is what a reasonable
-person using this software gets if it ships, not whether the spec names
-the input that triggers it — a reviewer who set a finding at Minor
-because the spec was silent has graded the spec, not the effect. Then:
-
-- **Critical and Important** enter the fix pass.
-- **Minor** goes to the ledger as `Final: minor (deferred): <one-liner>`
-  and to your final message under "Deferred minors". Minors never enter
-  the fix pass, and never become rulings — a ruling is a decision about a
-  conflict, not a note that you declined a polish suggestion.
-
-Fix the Critical and Important findings yourself — you are the
-implementer here — in ONE pass. Each fix is verified by TDD, not by a
-second reviewer: write the test that reproduces the finding, watch it
-fail, make it pass, then run the whole suite. Record each in the ledger as
-`Final: fixed <finding> — <test name> RED→GREEN, suite <N>/<N>`. A fix
-without a test that failed first is not verified; a suite that is not
-green after the pass means the pass is not over. Do not dispatch a
-re-review: it would re-read a diff whose covering tests already answer
-"addressed" and whose suite run already answers "broke nothing".
-
-A finding you decide not to fix is a ruling — `Final: Ruling: <finding> —
-<why the code stands> — <cost if wrong>` — and reaches your human partner
-in the rulings list. There is no second fix pass.
+When every task is complete, use superpowers:requesting-code-review, then superpowers:receiving-code-review, then superpowers:verification-before-completion, then collect the rulings, archive the workspace, and use superpowers:finishing-a-development-branch.
 
 ## Finish
 
 Before you archive anything, collect every ledger line containing
 `Ruling:` into your final message under "Rulings I made", in the order you
-made them, each with what it costs if wrong, and every `minor (deferred)`
-line under "Deferred minors". Both lists are exhaustive. Your final
-message is the only place the decisions you took on your human partner's
-behalf — and the findings you chose not to act on — reach them.
+made them, each with what it costs if wrong. The list is exhaustive. Your
+final message is the only place the decisions you took on your human
+partner's behalf reach them.
 
-When the final review is clean and its fixes are committed, archive this
+When the end review is done and its fixes are committed, archive this
 plan's workspace: run `bash <this skill's base directory>/../subagent-driven-development/scripts/sdd-archive PLAN_FILE`
 by its absolute path, from the working tree you're executing in. It moves the workspace to `.superpowers/sdd/_archive/<plan-basename>-<timestamp>/`,
 still git-ignored, so the ledger and reviews outlive the run. Never `rm -rf`
@@ -332,6 +276,3 @@ Use superpowers:finishing-a-development-branch.
 | "I read my own diff carefully; the final reviewer is redundant" | Same author, same blind spots. The reviewer is the only fresh context this run buys. |
 | "Tests should pass, the change was trivial" | "Should" is not evidence. The contract requires the command and its output. |
 | "Subagents are slow and expensive, I'll skip the final review too" | Inline already removed the per-task reviewers. One review of the whole branch is the floor, not the ceiling. |
-| "The reviewer said Minor, so it's Minor" | The label graded the spec's silence. Grade what the person gets. Re-grade, then gate. |
-| "The fix is obvious, no need for a failing test first" | The failing test is the only proof the finding was real and is now gone. Without it you have a diff and a hope. |
-| "I'll fix the minors too while I'm in there" | Every minor you fix is a test, a fix, and a suite run your partner did not ask for. Ledger them; your partner decides. |

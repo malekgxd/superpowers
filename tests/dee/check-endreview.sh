@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Fork edit check: the end review lives in requesting/receiving-code-review and verification; executing-plans only points at it.
+set -euo pipefail
+D="$(cd "$(dirname "$0")/../../skills" && pwd)"
+fail=0
+# check FILE then pins to need, after a "--" the pins that must be gone
+run() {
+  local f="$1"; shift
+  local -a need=() gone=(); local mode=need
+  for a in "$@"; do if [ "$a" = "--" ]; then mode=gone; elif [ $mode = need ]; then need+=("$a"); else gone+=("$a"); fi; done
+  for s in "${need[@]}"; do grep -qF -- "$s" "$f" || { echo "MISSING in $f: $s"; fail=1; }; done
+  for s in "${gone[@]}"; do ! grep -qF -- "$s" "$f" || { echo "STILL PRESENT in $f: $s"; fail=1; }; done
+}
+EP=('superpowers:requesting-code-review' 'superpowers:receiving-code-review' 'superpowers:verification-before-completion'
+  'sdd-archive PLAN_FILE' 'End review, fixes and verification: see Final Review')
+RC=('## Findings from the end review' 'model: fable' 'Reproduce each finding with a failing test or a command'
+  'Groups that share a file are merged' 'does not delete, weaken or rewrite an existing test'
+  'Neither the lead nor the fixers commit' '--base <reviewed commit>'
+  'More rounds run only on your human partner'"'"'s say' 'IMPLEMENT: One item at a time, test each')
+VC=('git diff --name-only <reviewed commit> HEAD' 'git checkout <reviewed commit> -- <files>'
+  'No test file changed since the reviewed commit: say so and skip the comparison.'
+  'Compare per test, never by the summary line'
+  'the path where the runner prints `PASS <path>` or `FAIL <path>`'
+  'An identity that passed at the reviewed commit and is missing now counts as not passing'
+  'one run against the real artifact' 'the manual steps are listed'
+  'NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE')
+check_all() {
+  fail=0
+  run "$EPF" "${EP[@]}" -- 'review-package' 'There is no second fix pass' 'minor (deferred)'
+  run "$RCF" "${RC[@]}"
+  run "$VCF" "${VC[@]}"
+  a=$(grep -nF -- '## Findings from the end review' "$RCF" | head -1 | cut -d: -f1)
+  b=$(grep -nF -- '## The Response Pattern' "$RCF" | head -1 | cut -d: -f1)
+  [ -n "$a" ] && [ -n "$b" ] && [ "$a" -lt "$b" ] || { echo "ORDER: end-review section must precede The Response Pattern"; fail=1; }
+  return $fail
+}
+EPF="${EP_SKILL:-$D/executing-plans/SKILL.md}"; RCF="${RC_SKILL:-$D/receiving-code-review/SKILL.md}"; VCF="${VC_SKILL:-$D/verification-before-completion/SKILL.md}"
+if [ -z "${ENDREVIEW_MUTANT:-}" ]; then
+  check_all || fail=1
+  tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+  mut() { # which-var file pin
+    export PIN="$3"; cp "$2" "$tmp/m.md"; perl -0pi -e 's/\Q$ENV{PIN}\E/X/g' "$tmp/m.md"
+    cmp -s "$2" "$tmp/m.md" && { echo "MUTANT NO-OP: $3"; fail=1; return; }
+    ( export ENDREVIEW_MUTANT=1; export "$1=$tmp/m.md"; bash "$0" >/dev/null ) && { echo "MUTANT PASSED: $3"; fail=1; } || true
+  }
+  for s in "${EP[@]}"; do mut EP_SKILL "$EPF" "$s"; done
+  for s in "${RC[@]}"; do mut RC_SKILL "$RCF" "$s"; done
+  for s in "${VC[@]}"; do mut VC_SKILL "$VCF" "$s"; done
+else
+  check_all >/dev/null || exit 1
+  exit 0
+fi
+[ "$fail" -eq 0 ] && echo "endreview: OK"
+exit $fail

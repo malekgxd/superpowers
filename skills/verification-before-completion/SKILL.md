@@ -35,6 +35,19 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
+## After review fixes
+
+Run this after the fix commit exists.
+
+1. `git diff --name-only <reviewed commit> HEAD` lists the test files that changed. No test file changed since the reviewed commit: say so and skip the comparison.
+2. Otherwise, in a disposable worktree at the fix commit, check those files out as they were in the reviewed commit (`git checkout <reviewed commit> -- <files>`) and run the suite.
+3. Every test that passed before still passes, or is listed with its reason. Compare per test, never by the summary line. The identity is what the runner prints for each test with its result: the test ID where the runner has one, the path where the runner prints `PASS <path>` or `FAIL <path>`, otherwise the test file and its exit code. An identity that passed at the reviewed commit and is missing now counts as not passing.
+4. Remove the disposable worktree afterwards.
+
+## The real thing
+
+Before "done", one run against the real artifact (the running app, the live URL, the real data). If that cannot run here, the manual steps are listed and the claim says so.
+
 ## Common Failures
 
 | Claim | Requires | Not Sufficient |
