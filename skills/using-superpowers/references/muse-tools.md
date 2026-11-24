@@ -28,7 +28,7 @@ Muse has native skill support via `muse skills`. To invoke a Superpowers skill, 
 
 ## Subagent dispatch
 
-Use `subagent_spawn` to delegate work to isolated subagents. Fill prompt templates (e.g., `implementer-prompt.md`, `task-reviewer-prompt.md`) before dispatching. If no subagent tool is available, do the work inline rather than inventing tool calls.
+Use `subagent_spawn` to delegate work to isolated subagents. Fill prompt templates (e.g., `implementer-prompt.md`) before dispatching. If no subagent tool is available, do the work inline rather than inventing tool calls.
 
 ## Task tracking
 

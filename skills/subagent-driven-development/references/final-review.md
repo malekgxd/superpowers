@@ -1,38 +1,16 @@
 # Final Review and Finish
 
 Part of superpowers:subagent-driven-development. Every task in the plan is
-complete.
+complete and committed.
 
-The final whole-branch review gets a package too: run
-`bash scripts/review-package PLAN_FILE MERGE_BASE HEAD` by its absolute path,
-from the working tree you're executing in (MERGE_BASE = the commit the
-branch started from, e.g. `git merge-base main HEAD`) and include the
-printed path in the final review dispatch, so the final reviewer reads
-one file instead of re-deriving the branch diff with git commands, and
-name `<workspace>/final-review.md` as the file it writes its full report
-to (it returns the verdict, the Important-or-worse one-liners, and its Declined to judge lines). Dispatch
-on the most capable available model (see SKILL.md's Model Selection), using
-superpowers:requesting-code-review's
-[code-reviewer.md](../../requesting-code-review/code-reviewer.md). Point it at
-the ledger's deferred-minor and parked lines so it can triage which must be
-fixed before merge. Every Declined to judge line is a ruling you make and
-ledger, exactly like a plan conflict: `Final: Ruling: <behavior the reviewer
-set aside> — <why it stands or why it is now a finding> — <cost if wrong>`.
+The whole change gets one review, now. In this order:
 
-If the final whole-branch review returns findings, dispatch ONE fix subagent
-with the complete findings list — not one fixer per finding.
-Per-finding fixers each rebuild context and re-run suites; a real
-session's final-review fix wave cost more than all its tasks combined.
-Then run exactly one scoped re-review of the fix wave
-(`bash scripts/review-package PLAN_FILE FIX_BASE HEAD` by its absolute path,
-from the working tree you're executing in, over the fix range,
-[re-review-prompt.md](../re-review-prompt.md)).
-Adjudicate any residual findings as in the fix loop's breaker
-(references/fix-loop.md): park with rulings, or rule on the load-bearing
-ones and ledger what you decided. Only the four things that stop a running
-plan (top of SKILL.md) stop you here. There is no second fix wave —
-residual load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+1. Use superpowers:requesting-code-review to start the one end review of
+   the whole change. Append to its focus text every ledger line for a
+   failure still open, with its reproducer.
+2. Use superpowers:receiving-code-review on what comes back.
+3. Use superpowers:verification-before-completion before you claim the
+   work is done.
 
 ### Finish
 

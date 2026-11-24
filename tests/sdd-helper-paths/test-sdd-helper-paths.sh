@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fails when any file under skills/ tells the agent to run an SDD or
-# executing-plans helper (sdd-workspace, task-brief, review-package,
+# executing-plans helper (sdd-workspace, task-brief,
 # task-start, task-done) by a skill-relative `scripts/...` path without
 # saying to run it by its absolute path from the working tree.
 #
@@ -20,7 +20,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # A backticked invocation whose path is relative: optional "bash ", then an
 # optional ../<skill>/ prefix, then scripts/<helper>. Absolute paths ($S/...,
 # /...) don't match.
-invocation='`(bash )?(\.\./[a-z-]+/)?scripts/(sdd-workspace|task-brief|review-package|task-start|task-done)'
+invocation='`(bash )?(\.\./[a-z-]+/)?scripts/(sdd-workspace|task-brief|task-start|task-done)'
 phrase='by its absolute path'
 
 failed=0

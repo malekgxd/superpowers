@@ -26,7 +26,7 @@
 # `git status` and out of accidental commits without modifying any tracked file.
 #
 # Single source of truth for the workspace location, so task-brief and
-# review-package cannot drift to different directories.
+# its callers cannot drift to different directories.
 #
 # The repository is the current directory's (see sdd-repo). -C DIR runs as
 # if started in DIR, the way git -C does: a caller working on another

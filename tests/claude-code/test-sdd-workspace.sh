@@ -420,65 +420,9 @@ PLAN
         echo "    stderr: $fence_err"
     fi
 
-    # --- review-package takes the plan first and lands in its directory ---
+    # The linked worktree below needs a commit that holds plan-a.md.
     local git_id=(-c user.email=t@example.com -c user.name=t -c commit.gpgsign=false)
-    ( cd "$repo" \
-        && git "${git_id[@]}" commit -qm c1 \
-        && printf 'y\n' > f && git add f \
-        && git "${git_id[@]}" commit -qm c2 )
-    local rp_out rp_path
-    rp_out="$(cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 HEAD)"
-    rp_path="$(printf '%s\n' "$rp_out" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
-    case "$rp_path" in
-        "$repo/.superpowers/sdd/plan-a/review-"*.diff)
-            pass "review-package writes its diff under the plan's workspace" ;;
-        *)
-            fail "review-package writes its diff under the plan's workspace"
-            echo "    got: $rp_path"
-            ;;
-    esac
-
-    rc=0
-    (cd "$repo" && "$SDD_SCRIPTS/review-package" HEAD~1 HEAD >/dev/null 2>&1) || rc=$?
-    if [[ "$rc" -eq 2 ]]; then
-        pass "review-package without a plan errors with exit 2"
-    else
-        fail "review-package without a plan errors with exit 2"
-        echo "    exit: $rc"
-    fi
-
-    local rp_explicit
-    rp_explicit="$(cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md HEAD~1 HEAD "$TEST_ROOT/explicit.diff")"
-    if [[ -s "$TEST_ROOT/explicit.diff" && "$rp_explicit" == *"$TEST_ROOT/explicit.diff"* ]]; then
-        pass "review-package honors an explicit OUTFILE"
-    else
-        fail "review-package honors an explicit OUTFILE"
-        echo "    got: $rp_explicit"
-    fi
-
-    # --- range guards: BASE must be an ancestor of HEAD, range must be non-empty ---
-    local divergent
-    divergent="$(cd "$repo" && git "${git_id[@]}" commit-tree 'HEAD~1^{tree}' -p 'HEAD~1' -m divergent)"
-    rc=0
-    local guard_err
-    guard_err="$(cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md "$divergent" HEAD 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -eq 3 && "$guard_err" == *"not a descendant"* ]]; then
-        pass "review-package rejects a BASE that is not an ancestor of HEAD with exit 3"
-    else
-        fail "review-package rejects a BASE that is not an ancestor of HEAD with exit 3"
-        echo "    exit: $rc"
-        echo "    stderr: $guard_err"
-    fi
-
-    rc=0
-    guard_err="$(cd "$repo" && "$SDD_SCRIPTS/review-package" plan-a.md HEAD HEAD 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -eq 3 && "$guard_err" == *"empty commit range"* ]]; then
-        pass "review-package rejects an empty BASE..HEAD range with exit 3"
-    else
-        fail "review-package rejects an empty BASE..HEAD range with exit 3"
-        echo "    exit: $rc"
-        echo "    stderr: $guard_err"
-    fi
+    ( cd "$repo" && git "${git_id[@]}" commit -qm c1 )
 
     # --- Worktree isolation: a linked worktree resolves its own workspace ---
     local wt="$TEST_ROOT/wt"
@@ -506,12 +450,6 @@ PLAN
     fi
 
     # --- Which repository: cwd, then -C, then the plan's (#2429, #1799) ---
-    printf 'wt-only\n' > "$wt/wt-only.txt"
-    ( cd "$wt" && git add wt-only.txt && git "${git_id[@]}" commit -qm wt-change )
-    local wt_base wt_head
-    wt_base="$(cd "$wt" && git rev-parse HEAD~1)"
-    wt_head="$(cd "$wt" && git rev-parse HEAD)"
-
     # An executor working in the worktree with an absolute path to the main
     # checkout's plan (writing-plans leaves the plan uncommitted there) keeps
     # its workspace in the worktree it is working in.
@@ -546,33 +484,6 @@ PLAN
         echo "    got: $c_brief"
     fi
 
-    local c_rp c_rp_path
-    c_rp="$(cd "$SDD_SCRIPTS/.." && bash scripts/review-package -C "$wt" plan-a.md "$wt_base" HEAD)" || true
-    c_rp_path="$(printf '%s\n' "$c_rp" | sed -n 's/^wrote \(.*\): [0-9].*$/\1/p')"
-    case "$c_rp_path" in
-        "$wt_root/.superpowers/sdd/plan-a/review-"*.diff)
-            if grep -q 'wt-only.txt' "$c_rp_path"; then
-                pass "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
-            else
-                fail "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
-                echo "    diff lacks the worktree's commit: $c_rp_path"
-            fi
-            ;;
-        *)
-            fail "review-package -C DIR diffs DIR's HEAD into DIR's workspace"
-            echo "    got: $c_rp"
-            ;;
-    esac
-
-    rc=0
-    (cd "$repo" && "$SDD_SCRIPTS/review-package" -C "$TEST_ROOT/no-such-dir" plan-a.md HEAD~1 HEAD >/dev/null 2>&1) || rc=$?
-    if [[ "$rc" -eq 2 ]]; then
-        pass "review-package -C with a missing directory errors with exit 2"
-    else
-        fail "review-package -C with a missing directory errors with exit 2"
-        echo "    exit: $rc"
-    fi
-
     # Run from outside any repository (e.g. the skill's own directory in an
     # installed plugin), the scripts stop even when the plan's absolute path
     # is inside a repository: like git, they act on the current directory's
@@ -582,7 +493,7 @@ PLAN
     local nr_msg="SDD scripts must run from inside the git working tree you're executing in, with at least one commit (current directory: $nonrepo). If this is a new project, run 'git init' and make a first commit, then rerun."
     local nr_before nr_cmd nr_err
     nr_before="$(find "$wt_root/.superpowers" | sort)"
-    for nr_cmd in "sdd-workspace $wt/plan-a.md" "task-brief $wt/plan-a.md 1" "review-package $wt/plan-a.md $wt_base $wt_head"; do
+    for nr_cmd in "sdd-workspace $wt/plan-a.md" "task-brief $wt/plan-a.md 1"; do
         rc=0
         # shellcheck disable=SC2086 # nr_cmd is a fixed script name plus its arguments
         nr_err="$(cd "$nonrepo" && "$SDD_SCRIPTS"/$nr_cmd 2>&1 >/dev/null)" || rc=$?
@@ -623,33 +534,11 @@ PLAN
             echo "    stderr: $gf_err"
         fi
     done
-    rc=0
-    gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: not a git repository"* ]]; then
-        pass "review-package outside any repository exits 2 naming both fixes"
-    else
-        fail "review-package outside any repository exits 2 naming both fixes"
-        echo "    exit: $rc"
-        echo "    stderr: $gf_err"
-    fi
     if [[ ! -e "$gf/.superpowers" ]]; then
         pass "nothing is written outside a repository"
     else
         fail "nothing is written outside a repository"
         find "$gf/.superpowers" | sed 's/^/    /'
-    fi
-
-    # A repository with no commit yet has no range to review, so
-    # review-package gets the same stop, naming its directory.
-    git init -q -b main "$gf"
-    rc=0
-    gf_err="$(cd "$gf" && "$SDD_SCRIPTS/review-package" plan.md HEAD~1 HEAD 2>&1 >/dev/null)" || rc=$?
-    if [[ "$rc" -eq 2 && "$gf_err" == "$no_repo_msg"$'\n'"git said: fatal: "* && ! -e "$gf/.superpowers" ]]; then
-        pass "review-package in a repository with no commit exits 2 with the same message"
-    else
-        fail "review-package in a repository with no commit exits 2 with the same message"
-        echo "    exit: $rc"
-        echo "    stderr: $gf_err"
     fi
 
     # --- git refuses the repository itself: its reason must reach the caller ---
@@ -675,7 +564,7 @@ PLAN
     # --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---
     local stripped="$TEST_ROOT/stripped-scripts"
     mkdir -p "$stripped"
-    cp "$SDD_SCRIPTS/sdd-repo" "$SDD_SCRIPTS/sdd-workspace" "$SDD_SCRIPTS/task-brief" "$SDD_SCRIPTS/review-package" "$stripped/"
+    cp "$SDD_SCRIPTS/sdd-repo" "$SDD_SCRIPTS/sdd-workspace" "$SDD_SCRIPTS/task-brief" "$stripped/"
     chmod -x "$stripped"/*
     local noexec_out noexec_rc=0
     noexec_out="$(cd "$repo" && bash "$stripped/task-brief" plan-b.md 1 2>&1)" || noexec_rc=$?

@@ -35,7 +35,7 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
     3. Verify implementation works
-    4. Commit your work
+    4. Run no git command that writes; the orchestrator commits. Skip any commit step in your brief.
     5. Self-review (see below)
     6. Report back
 
@@ -44,20 +44,21 @@ Subagent (general-purpose):
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
-    While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    While iterating, run the focused test for what you're changing;
+    run only the tests your brief names. The orchestrator runs the full
+    suite after the wave.
 
     ## You Do Not Dispatch Subagents
 
     Do all of this task's work yourself. Never spawn a subagent to
     implement part of the task, and above all never spawn a reviewer to
     check your work. Self-review (below) means reading your own diff.
-    Review is the controller's job: after you report, it dispatches a
-    fresh reviewer against your diff. A reviewer you spawn duplicates
-    that review at full cost, and its approval counts for nothing in
-    the process. If you catch yourself thinking "an independent review
-    would strengthen my report" — that review is already scheduled.
-    Report instead.
+    Review happens once, at the end, on the whole change, and the
+    controller starts it. A reviewer you spawn duplicates that review
+    at full cost, and its approval counts for nothing in the process.
+    If you catch yourself thinking "an independent review would
+    strengthen my report" — that review is already scheduled. Report
+    instead.
 
     ## Code Organization
 
@@ -116,15 +117,6 @@ Subagent (general-purpose):
 
     If you find issues during self-review, fix them now before reporting.
 
-    ## After Review Findings
-
-    If the task review finds issues, you will be resumed with the findings.
-    Fix them, re-run the tests that cover the amended code, and append a fix
-    report to your report file: what you changed, the covering tests you
-    ran, the command, and the output. Reviewers will not re-run tests for
-    you — your report is the test evidence. Then reply with the same short
-    status contract as your first report.
-
     ## Report Format
 
     Write your full report to [REPORT_FILE]:
@@ -140,7 +132,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Files changed (paths)
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

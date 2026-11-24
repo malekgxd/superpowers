@@ -1,28 +1,43 @@
 #!/usr/bin/env bash
-# SDD fork edits: reviewer findings land in a file, and a finished workspace is archived, not deleted.
+# SDD fork edits: one builder per task, no per-task review, and a finished workspace is archived, not deleted.
 set -euo pipefail
 D="$(cd "${SDD_SKILL_DIR:-$(dirname "$0")/../../skills/subagent-driven-development}" && pwd)"
-# Upstream 7.0.1 moved the fix loop and final review into references/: check the skill text as a whole.
+# Upstream 7.0.1 moved the final review into references/: check the skill text as a whole.
 SK=$(cat "$D/SKILL.md" "$D"/references/*.md)
 fail=0
 ok() { echo "OK   $1"; }
 bad() { echo "FAIL $1"; fail=1; }
 
-grep -qF -- '[REVIEW_FILE]' "$D/task-reviewer-prompt.md" && grep -qF -- 'Write your full report to [REVIEW_FILE]' "$D/task-reviewer-prompt.md" \
-  && ok "task reviewer writes its report to [REVIEW_FILE]" || bad "task reviewer lacks [REVIEW_FILE] contract"
-grep -qF -- '[REVIEW_FILE]' "$D/re-review-prompt.md" && grep -qF -- '## Re-review round [ROUND]' "$D/re-review-prompt.md" \
-  && ok "re-reviewer appends a round heading to [REVIEW_FILE]" || bad "re-reviewer lacks [REVIEW_FILE] append contract"
-grep -qF -- 'final message is the report itself' "$D/task-reviewer-prompt.md" && bad "task reviewer still told to reply with the whole report" || ok "old reply-is-the-report line is gone"
-lean=$(sed -n '/^```$/,/^```$/p' "$D/task-reviewer-prompt.md" | tr -s ' \n' ' ')
-grep -qF -- "is a named risk. Search this repo's own files once for an existing one by what it does" <<<"$lean" \
-  && grep -qF -- "A hit is a finding: name the existing path to call instead." <<<"$lean" \
-  && ok "task reviewer searches the repo for reuse" || bad "task reviewer lacks the lean reuse search"
-grep -qF -- "Code the brief never asked for is also a Part 1 **Extra** finding: report it in both parts, so the spec verdict is ❌." <<<"$lean" \
-  && ok "unrequested code stays a Part 1 Extra" || bad "lean block lost the Part 1 Extra routing"
-grep -qE -- 'ponytail:|shortcut:' "$D/task-reviewer-prompt.md" && bad "shortcut comments exempt findings" || ok "no shortcut-comment exemption"
-grep -qF -- 'task-N-review.md' <<<"$SK" && ok "SKILL names the review file" || bad "SKILL never names task-N-review.md"
+for s in 'form a wave and are dispatched together in one message, as foreground calls' \
+  'A task with no `Depends on` line depends on the task before it' \
+  'Builders run no git command that writes' \
+  'git commit --only --' \
+  'A changed path that belongs to no task in the wave stops the wave' \
+  'Task <N>: complete (commit <sha7>, tests <summary>)' \
+  'one such task at a time' \
+  'Start: <sha>'; do
+  grep -qF -- "$s" "$D/SKILL.md" && ok "SKILL.md has: $s" || bad "SKILL.md lacks: $s"
+done
+for s in 'Never dispatch multiple implementation subagents in parallel' 'review-package' 'task-reviewer' 'fix-loop' 'Fix-loop escalation' 're-review-prompt'; do
+  grep -qF -- "$s" <<<"$SK" && bad "skill text still says: $s" || ok "skill text is free of: $s"
+done
+for s in 'superpowers:requesting-code-review' 'superpowers:receiving-code-review' 'superpowers:verification-before-completion' 'bash scripts/sdd-archive' 'Rulings I made'; do
+  grep -qF -- "$s" "$D/references/final-review.md" && ok "final-review.md has: $s" || bad "final-review.md lacks: $s"
+done
+for s in 'Run no git command that writes' 'the orchestrator commits' 'run only the tests your brief names'; do
+  grep -qF -- "$s" "$D/implementer-prompt.md" && ok "implementer-prompt.md has: $s" || bad "implementer-prompt.md lacks: $s"
+done
+for s in 'Commit your work' 'After Review Findings' 'Commits created'; do
+  grep -qF -- "$s" "$D/implementer-prompt.md" && bad "implementer-prompt.md still says: $s" || ok "implementer-prompt.md is free of: $s"
+done
+for s in 'A task with a commit is complete even without its ledger line' 'git log <start sha>..HEAD'; do
+  grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
+done
+grep -qF -- 'review' "$D/references/batching.md" && bad "batching.md still mentions review" || ok "batching.md is free of: review"
+for f in task-reviewer-prompt.md re-review-prompt.md references/fix-loop.md references/review-file.md references/cannot-verify.md scripts/review-package; do
+  [ ! -e "$D/$f" ] && ok "$f is gone" || bad "$f still exists"
+done
 grep -qF -- 'final-review.md' <<<"$SK" && ok "SKILL names final-review.md" || bad "SKILL never names final-review.md"
-grep -qF -- 'review-file path' <<<"$SK" && ok "fix dispatches carry the review file" || bad "fix dispatches omit the review file"
 grep -qF -- 'rm -rf <workspace>' <<<"$SK" && bad "SKILL still deletes the workspace" || ok "SKILL no longer deletes the workspace"
 grep -qF -- 'scripts/sdd-archive' <<<"$SK" && ok "SKILL finishes with sdd-archive" || bad "SKILL never calls sdd-archive"
 grep -qF -- 'delete this plan' <<<"$SK" && bad "SKILL still says delete this plan" || ok "process flow says archive"
@@ -71,27 +86,20 @@ fi
 E="$(cd "$(dirname "$0")/../../skills/executing-plans" && pwd)/SKILL.md"
 grep -qiF -- "delete this plan's workspace" "$E" && bad "executing-plans still deletes the workspace" || ok "executing-plans archives the workspace"
 grep -qF -- 'sdd-archive PLAN_FILE' "$E" && ok "executing-plans finishes with sdd-archive" || bad "executing-plans never calls sdd-archive"
-grep -qF -- 'Declined to judge' <<<"$SK" && ok "SDD final review returns Declined-to-judge lines" || bad "SDD final review drops Declined-to-judge lines"
 
 # Reachability: rules that moved to references/ must be read from SKILL.md, and live in the file that is read.
 for l in $(grep -oE '\(references/[a-z-]+\.md\)' "$D/SKILL.md" | tr -d '()' | sort -u); do [ -f "$D/$l" ] || bad "SKILL.md points at missing $l"; done
-for r in fix-loop final-review review-file gate-check; do grep -qF "(references/$r.md)" "$D/SKILL.md" || bad "SKILL.md never points at references/$r.md"; done
-grep -qF -- '<workspace>/final-review.md' "$D/references/final-review.md" && grep -qF -- 'Declined to judge' "$D/references/final-review.md" \
-  && grep -qF -- 'bash scripts/sdd-archive' "$D/references/final-review.md" && ok "final-review.md carries report file, Declined-to-judge, sdd-archive" || bad "final-review.md lost a fork contract"
-grep -qF -- 'review-file path' "$D/references/fix-loop.md" && ok "fix-loop.md carries the review file" || bad "fix-loop.md lost the review file"
-for s in 'do not dispatch' 'Read it again before every round' '(references/waiting.md)'; do grep -qF -- "$s" "$D/SKILL.md" || bad "SKILL.md lost: $s"; done
-grep -qF -- 'ledger each Minor finding' "$D/SKILL.md" && ok "SKILL.md ledgers Minor findings on every review" || bad "Minor findings only ledgered inside the fix loop"
-grep -F -- '**DONE:**' "$D/SKILL.md" | grep -qF -- 'with the printed path and the review file.' && ok "DONE line dispatches the reviewer with the review file" || bad "DONE line lost the review file"
+for r in final-review gate-check resuming; do grep -qF "(references/$r.md)" "$D/SKILL.md" || bad "SKILL.md never points at references/$r.md"; done
+for s in 'do not dispatch' '(references/waiting.md)'; do grep -qF -- "$s" "$D/SKILL.md" || bad "SKILL.md lost: $s"; done
 # Negative cases: each mutant of a copy of the skill dir must fail this check; a no-op mutant fails too.
 if [ -z "${SDD_CHECK_MUTANT:-}" ]; then
   mt=$(mktemp -d); trap 'rm -rf "$mt"' EXIT
   mut() { rm -rf "$mt/m"; cp -r "$D" "$mt/m"; perl -0pi -e "$2" "$mt/m/$1"; cmp -s "$D/$1" "$mt/m/$1" && { bad "mutant no-op: $3"; return; }
     SDD_CHECK_MUTANT=1 SDD_SKILL_DIR="$mt/m" bash "$0" >/dev/null 2>&1 && bad "mutant passed: $3" || true; }
   mut SKILL.md 's/\(references\/final-review\.md\)/(references\/final.md)/g' 'final-review pointer broken'
-  mut references/final-review.md 's/`<workspace>\/final-review\.md`/the workspace/' 'final review report file dropped'
-  mut SKILL.md 's/^After every review, read its review file and ledger each Minor finding\n.*\n\n//m' 'Minor-finding ledger line dropped'
-  mut references/fix-loop.md 's/review-file path/review path/g' 'fix-loop review file dropped'
-  mut SKILL.md 's/ Read it again before every round,/,/' 'fix-loop reread dropped'
+  mut SKILL.md 's/Builders run no git command that writes/Builders commit/' 'builder git-write ban dropped'
+  mut references/final-review.md 's/bash scripts\/sdd-archive/sdd-archive/' 'final-review sdd-archive lost its bash'
+  mut references/resuming.md 's/A task with a commit is complete even without its ledger line/x/' 'resume-from-commits rule dropped'
 fi
 
 [ "$fail" -eq 0 ] && echo "sdd: OK"
