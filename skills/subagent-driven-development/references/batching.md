@@ -14,4 +14,4 @@ tasks are complete and no two list the same file. A plan with no
 `Depends on` lines is never batched, because each of its tasks waits for
 the one before it.
 
-You still commit each task of a batch alone, `Task <N>:`, with its own ledger line.
+You still commit each task of a batch alone, `Task <N> (<plan-basename>):`, with its own ledger line.

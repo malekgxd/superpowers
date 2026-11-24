@@ -19,6 +19,7 @@ grep -qF -- 'Name anything outside the diff that carries the same rule, value or
 grep -qF -- '-HANDOFF.md' "$F" && ok "pin: -HANDOFF.md" || bad "MISSING: -HANDOFF.md"
 grep -qF -- 'It does not start building.' "$F" && ok "pin: It does not start building." || bad "MISSING: It does not start building."
 grep -qF -- 'git diff --quiet <plan commit> -- <plan path>' "$F" && ok "pin: git diff --quiet <plan commit>" || bad "MISSING: git diff --quiet <plan commit>"
+grep -qF -- 'git diff --quiet <spec commit> -- <spec path>' "$F" && ok "pin: git diff --quiet <spec commit>" || bad "MISSING: git diff --quiet <spec commit>"
 grep -qF -- 'name a model on every dispatch; an unset model runs on your own' "$F" && ok "pin: name a model on every dispatch" || bad "MISSING: name a model on every dispatch"
 grep -qF -- 'every committed plan goes to Astra (`gpt-6.2-astra`)' "$F" && ok "pin: every committed plan goes to A" || bad "MISSING: every committed plan goes to A"
 grep -qF -- 'plain text with no backticks, quotes or dollar signs' "$F" && ok "pin: plain text with no backticks, " || bad "MISSING: plain text with no backticks, "

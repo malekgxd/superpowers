@@ -226,12 +226,13 @@ The handoff file:
 
 Plan: <path> · Spec: <path> · Intent: <path>
 Plan commit: <full sha of the commit that holds the challenged plan>
+Spec commit: <full sha of the commit that recorded the spec's `Challenge:` line>
 Repo: <path> · Worktree: <path> · Base: <branch> at <sha>
 Method: subagent-driven (or: native)
 Model rule: name a model on every dispatch; an unset model runs on your own.
 Stages left: build (superpowers:subagent-driven-development, or superpowers:executing-plans when native), review (superpowers:requesting-code-review), fix (superpowers:receiving-code-review), verify (superpowers:verification-before-completion), finish (superpowers:finishing-a-development-branch).
 Stops: the four stops in subagent-driven-development.
-First act: `git diff --quiet <plan commit> -- <plan path>` exits 0, `git merge-base --is-ancestor <plan commit> HEAD` exits 0, then `gate-check` with the plan path. Anything else: stop and ask.
+First act: `git diff --quiet <plan commit> -- <plan path>` exits 0, `git diff --quiet <spec commit> -- <spec path>` exits 0 (a spec edited after its challenge needs the changed part challenged or your human partner's ruling), `git merge-base --is-ancestor <plan commit> HEAD` exits 0, then `gate-check` with the plan path. Anything else: stop and ask.
 
 ## Review Focus
 

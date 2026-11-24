@@ -237,7 +237,7 @@ rush it into implementation.
 For each DONE report, confirm with `git status` and `git diff --stat` that
 the changed files are the task's Files, then commit that task alone:
 `git add -- <its files>`, then `git commit --only -- <its files>`, message
-starting `Task <N>:`.
+starting `Task <N> (<plan-basename>):`, the plan file's name without `.md`.
 
 - A changed path that belongs to no task in the wave stops the wave for a ruling.
 - A builder's test failure during a wave is rerun alone after the wave

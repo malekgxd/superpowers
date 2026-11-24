@@ -73,6 +73,7 @@ Act on the line only when all of these hold:
 - Step 1 tests passed;
 - the branch is a named branch (a detached HEAD always gets the menu);
 - this session ran the review chain on the branch's current HEAD and it passed (a fresh or resumed session with no such record gets the menu);
+- that review was a Sol review (after a fallback review or a self-review the menu is shown: no merge without your human partner's explicit go for the current HEAD);
 - the main checkout is already on the base branch and `git status --porcelain` there prints nothing;
 - the line is present exactly once with a recognised value.
 

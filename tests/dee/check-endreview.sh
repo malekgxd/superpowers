@@ -12,14 +12,14 @@ run() {
   for s in "${gone[@]}"; do ! grep -qF -- "$s" "$f" || { echo "STILL PRESENT in $f: $s"; fail=1; }; done
 }
 EP=('superpowers:requesting-code-review' 'superpowers:receiving-code-review' 'superpowers:verification-before-completion'
-  'sdd-archive PLAN_FILE' 'End review, fixes and verification: see Final Review')
+  'sdd-archive PLAN_FILE' 'End review, fixes and verification: see Final Review' 'steps whose commits already change the task')
 RC=('## Findings from the end review' 'model: fable' 'Reproduce each finding with a failing test or a command'
   'Groups that share a file are merged' 'does not delete, weaken or rewrite an existing test'
   'Neither the lead nor the fixers commit' '--base <reviewed commit>'
   'More rounds run only on your human partner'"'"'s say' 'IMPLEMENT: One item at a time, test each'
   'Where no subagent can be dispatched, you do items 1 to 4 yourself' 'Every finding left unfixed goes into the re-review'"'"'s focus text'
-  'No finding reproduced: no fix commit and no re-review')
-VC=('git diff --name-only <reviewed commit> HEAD' 'git checkout <reviewed commit> -- <files>'
+  'No finding reproduced: no fix commit and no re-review' 'Fix: reviewed <reviewed sha>, guard pending' 'does not close it')
+VC=('git diff --name-status -M <reviewed commit> HEAD' 'Run the normal full suite on the fix commit' 'Never run that checkout with nothing after `--`' 'git checkout <reviewed commit> -- <files>'
   'No test file changed since the reviewed commit: say so and skip the comparison.'
   'Compare per test, never by the summary line' 'any path that did not exist at the reviewed commit' 'For a renamed test, check out its old path'
   'the path where the runner prints `PASS <path>` or `FAIL <path>`'

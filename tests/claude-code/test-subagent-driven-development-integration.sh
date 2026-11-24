@@ -6,10 +6,13 @@
 # YAGNI enforcement subset (forbidden exports + reviewer-as-gate semantics)
 # and is stricter on that axis. This bash test additionally asserts:
 #   - >=3 git commits (initial + per-task commits, exercising SDD's
-#     commit-per-task workflow shape)
-#   - >=2 Claude Code subagent dispatches via Agent or Task (drill only asserts >=1)
+#     commit-per-task workflow shape), one `Task <N> (<plan-basename>):`
+#     commit per task, in order, each touching only its task's files
+#   - >=2 Claude Code subagent dispatches via Agent or Task (drill only asserts >=1),
+#     Task 1's builder before Task 2's
+#   - one end review after the last builder, none per task
 #   - Claude Code task-tracking tool usage (drill makes no assertion)
-#   - test/math.test.js exists (drill relies on `npm test` succeeding)
+#   - test/add.test.js and test/multiply.test.js exist (drill relies on `npm test` succeeding)
 #   - analyze-token-usage.py token-budget telemetry
 # Kept until those assertions are added to drill or explicitly retired.
 set -euo pipefail
@@ -52,19 +55,40 @@ cat > package.json <<'EOF'
 }
 EOF
 
-mkdir -p src test docs/superpowers/plans
+mkdir -p src test docs/superpowers/plans docs/superpowers/specs docs/superpowers/intents
+
+# gate-check needs a committed accepted intent, and a Challenge: line in the spec and plan headers.
+cat > docs/superpowers/intents/math.md <<'EOF'
+# Intent: math helpers
+Author: Test User. Status: accepted
+EOF
+
+cat > docs/superpowers/specs/math.md <<'EOF'
+# Math helpers spec
+Intent: docs/superpowers/intents/math.md
+Challenge: 2026-01-01 holds
+
+## Behaviour
+
+`add(a, b)` returns the sum and `multiply(a, b)` the product. Nothing else is exported.
+EOF
 
 # Create a simple implementation plan
 cat > docs/superpowers/plans/implementation-plan.md <<'EOF'
 # Test Implementation Plan
 
+**Spec:** `docs/superpowers/specs/math.md`
+**Intent:** `docs/superpowers/intents/math.md`
+**Challenge:** 2026-01-01 holds
+
 This is a minimal plan to test the subagent-driven-development workflow.
+It has no `Depends on` lines: the tasks run in order.
 
 ## Task 1: Create Add Function
 
 Create a function that adds two numbers.
 
-**File:** `src/math.js`
+**Files:** `src/add.js`, `test/add.test.js`
 
 **Requirements:**
 - Function named `add`
@@ -79,7 +103,7 @@ export function add(a, b) {
 }
 ```
 
-**Tests:** Create `test/math.test.js` that verifies:
+**Tests:** Create `test/add.test.js` that verifies:
 - `add(2, 3)` returns `5`
 - `add(0, 0)` returns `0`
 - `add(-1, 1)` returns `0`
@@ -90,7 +114,7 @@ export function add(a, b) {
 
 Create a function that multiplies two numbers.
 
-**File:** `src/math.js` (add to existing file)
+**Files:** `src/multiply.js`, `test/multiply.test.js`
 
 **Requirements:**
 - Function named `multiply`
@@ -106,7 +130,7 @@ export function multiply(a, b) {
 }
 ```
 
-**Tests:** Add to `test/math.test.js`:
+**Tests:** Create `test/multiply.test.js` that verifies:
 - `multiply(2, 3)` returns `6`
 - `multiply(0, 5)` returns `0`
 - `multiply(-2, 3)` returns `-6`
@@ -234,35 +258,68 @@ else
 fi
 echo ""
 
+# Test 4: Legacy plan (no Depends on lines) runs in order: Task 1's builder before Task 2's
+echo "Test 4: Dispatch order..."
+first_line() { { grep -nE "$1" "$SESSION_FILE" || true; } | head -1 | cut -d: -f1; }
+t1_line=$(first_line '"name":"(Agent|Task)".*task-1-brief')
+t2_line=$(first_line '"name":"(Agent|Task)".*task-2-brief')
+if [ -n "$t1_line" ] && [ -n "$t2_line" ] && [ "$t1_line" -lt "$t2_line" ]; then
+    echo "  [PASS] Task 1 builder dispatched before Task 2 builder"
+else
+    echo "  [FAIL] Builder dispatch order (task 1 at line '${t1_line}', task 2 at line '${t2_line}')"
+    FAILED=$((FAILED + 1))
+fi
+echo ""
+
+# Test 5: One end review, after the last builder, none per task
+echo "Test 5: One end review..."
+SOL_RE='"name":"Skill".*"skill":"codex:adversarial-review"'
+FALLBACK_RE='"name":"(Agent|Task)".*Senior Code Reviewer'
+sol_count=$(grep -cE "$SOL_RE" "$SESSION_FILE" || true)
+fallback_count=$(grep -cE "$FALLBACK_RE" "$SESSION_FILE" || true)
+review_count=$((sol_count + fallback_count))
+first_review=$(first_line "$SOL_RE|$FALLBACK_RE")
+# A fix stage adds exactly one re-review; the ledger (live or archived) records it.
+allowed=1
+if grep -rqs 'Fix: reviewed' "$TEST_PROJECT/.superpowers/sdd"; then allowed=2; fi
+if [ "$review_count" -ge 1 ] && [ "$review_count" -le "$allowed" ]; then
+    echo "  [PASS] $review_count review(s) launched ($allowed allowed)"
+else
+    echo "  [FAIL] $review_count review(s) launched (expected 1 to $allowed)"
+    FAILED=$((FAILED + 1))
+fi
+if [ -n "$first_review" ] && [ -n "$t2_line" ] && [ "$first_review" -gt "$t2_line" ]; then
+    echo "  [PASS] The review started after the last builder"
+else
+    echo "  [FAIL] No review after the last builder (review at line '${first_review}', task 2 at line '${t2_line}')"
+    FAILED=$((FAILED + 1))
+fi
+if [ "$fallback_count" -ge 1 ]; then
+    if grep -qi 'not a Sol review' "$OUTPUT_FILE"; then
+        echo "  [PASS] Fallback review disclosed as not a Sol review"
+    else
+        echo "  [FAIL] Fallback review ran but the summary does not say 'not a Sol review'"
+        FAILED=$((FAILED + 1))
+    fi
+fi
+echo ""
+
 # Test 6: Implementation actually works
 echo "Test 6: Implementation verification..."
-if [ -f "$TEST_PROJECT/src/math.js" ]; then
-    echo "  [PASS] src/math.js created"
-
-    if grep -q "export function add" "$TEST_PROJECT/src/math.js"; then
-        echo "  [PASS] add function exists"
+for fn in add multiply; do
+    if grep -q "export function $fn" "$TEST_PROJECT/src/$fn.js" 2>/dev/null; then
+        echo "  [PASS] $fn function exists in src/$fn.js"
     else
-        echo "  [FAIL] add function missing"
+        echo "  [FAIL] $fn function missing from src/$fn.js"
         FAILED=$((FAILED + 1))
     fi
-
-    if grep -q "export function multiply" "$TEST_PROJECT/src/math.js"; then
-        echo "  [PASS] multiply function exists"
+    if [ -f "$TEST_PROJECT/test/$fn.test.js" ]; then
+        echo "  [PASS] test/$fn.test.js created"
     else
-        echo "  [FAIL] multiply function missing"
+        echo "  [FAIL] test/$fn.test.js not created"
         FAILED=$((FAILED + 1))
     fi
-else
-    echo "  [FAIL] src/math.js not created"
-    FAILED=$((FAILED + 1))
-fi
-
-if [ -f "$TEST_PROJECT/test/math.test.js" ]; then
-    echo "  [PASS] test/math.test.js created"
-else
-    echo "  [FAIL] test/math.test.js not created"
-    FAILED=$((FAILED + 1))
-fi
+done
 
 # Try running tests
 if cd "$TEST_PROJECT" && npm test > test-output.txt 2>&1; then
@@ -283,11 +340,30 @@ else
     echo "  [FAIL] Too few commits ($commit_count, expected >2)"
     FAILED=$((FAILED + 1))
 fi
+# One `Task <N> (implementation-plan):` commit per task, Task 1 first, each within its task's files
+t1_sha=$(git -C "$TEST_PROJECT" log --format=%H --grep='^Task 1 (implementation-plan):')
+t2_sha=$(git -C "$TEST_PROJECT" log --format=%H --grep='^Task 2 (implementation-plan):')
+if [ "$(printf '%s\n' "$t1_sha" | grep -c .)" -eq 1 ] && [ "$(printf '%s\n' "$t2_sha" | grep -c .)" -eq 1 ] \
+    && git -C "$TEST_PROJECT" merge-base --is-ancestor "$t1_sha" "$t2_sha"; then
+    echo "  [PASS] One commit per task, Task 1 before Task 2"
+    for pair in "$t1_sha:add" "$t2_sha:multiply"; do
+        stray=$(git -C "$TEST_PROJECT" show --format= --name-only "${pair%%:*}" | grep -vxE "(src/${pair##*:}\.js|test/${pair##*:}\.test\.js)" || true)
+        if [ -z "$stray" ]; then
+            echo "  [PASS] ${pair##*:} commit touches only its task's files"
+        else
+            echo "  [FAIL] ${pair##*:} commit touches other files: $stray"
+            FAILED=$((FAILED + 1))
+        fi
+    done
+else
+    echo "  [FAIL] Expected exactly one 'Task 1 (implementation-plan):' and one 'Task 2 (implementation-plan):' commit, in order"
+    FAILED=$((FAILED + 1))
+fi
 echo ""
 
 # Test 8: Check for extra features (the end review should catch them)
 echo "Test 8: No extra features added..."
-if grep -q "export function divide\|export function power\|export function subtract" "$TEST_PROJECT/src/math.js" 2>/dev/null; then
+if grep -q "export function divide\|export function power\|export function subtract" "$TEST_PROJECT"/src/*.js 2>/dev/null; then
     echo "  [WARN] Extra features found (the end review should have caught this)"
     # Not failing on this as it tests reviewer effectiveness
 else

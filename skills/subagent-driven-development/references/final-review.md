@@ -3,7 +3,7 @@
 Part of superpowers:subagent-driven-development. Every task in the plan is
 complete and committed.
 
-The whole change gets one review, now. In this order:
+The whole change gets one review, now. A ledger that already holds a `Review:` or `Fix: reviewed` line is a review in flight: [resuming.md](resuming.md) says where it resumes, and no second end review starts. Otherwise, in this order:
 
 1. Use superpowers:requesting-code-review to start the one end review of
    the whole change. Append to its focus text every ledger line for a

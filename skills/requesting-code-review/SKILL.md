@@ -13,16 +13,17 @@ Review once, when the whole change is committed. Not per task.
 
 ## How
 
-1. Read `model-routing`'s CODEX-LANE.md.
+1. Check Codex first. No `codex:adversarial-review` skill, a refused Skill call or a failed launch: use the Fallback below now, without repairing the plugin first. Otherwise read `model-routing`'s CODEX-LANE.md.
 2. Start this through the Skill tool, with the base branch the change merges into:
    `/codex:adversarial-review --base <base> --model gpt-6.2-sol -- <Review Focus text>`
-   Add `--background` right after the command name (`--wait` only for a diff of one or two files): without one of them the command stops to ask which. Read a background result with `/codex:result`.
-3. The focus text is the plan's Review Focus section verbatim, as plain text, plus any failing-combination reproducer the build ledgered.
-4. No second review by another model.
+   Add `--background` right after the command name (`--wait` only for a diff of one or two files): without one of them the command stops to ask which.
+3. Ledger `Review: job <job-id> on <sha>`: the job id from the launch or `/codex:status`, the sha from `git rev-parse HEAD`. Read the result with `/codex:result <job-id>`, never bare: a bare `/codex:result` returns the latest finished job, which can be an earlier review. The verdict counts only when the result's `Target:` line names your base and HEAD is still the ledgered sha.
+4. The focus text is the plan's Review Focus section verbatim, as plain text, plus any failing-combination reproducer the build ledgered.
+5. No second review by another model.
 
-## Fallback: no Codex plugin installed
+## Fallback: Codex unavailable or refused
 
-Dispatch one `general-purpose` subagent on the whole branch, filling the template at [code-reviewer.md](code-reviewer.md). Use the same for the re-review, with `{BASE_SHA}` set to the reviewed commit.
+Codex is unavailable (step 1), or it refused the review and the `gpt-6.1-sol` rerun too: dispatch one `general-purpose` subagent with `model: opus` on the whole branch, filling the template at [code-reviewer.md](code-reviewer.md) with the range pinned as two shas. Ledger `Final review: fallback (general-purpose, opus)`. Use the same for the re-review, with `{BASE_SHA}` set to the reviewed commit.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
@@ -34,7 +35,9 @@ The ready-to-merge summary then says the review was not a Sol review.
 
 Its verdicts map onto the Sol ones: `Yes` counts as `approve`; `With fixes` and `No` are findings and go to the fix stage. Every Declined to judge line is a ruling you make and ledger, as `Final: Ruling: <behaviour the reviewer set aside> — <why it stands or why it is now a finding> — <cost if wrong>`.
 
-No Codex plugin and no subagent tool: do the review in [code-reviewer.md](code-reviewer.md) yourself on the same range, as a separate pass after the last commit. Ledger `Final review: self-review (no subagent tool)`. The ready-to-merge summary says the only review was a self-review by the author, and your human partner decides whether that is enough before any merge.
+No Codex plugin and no subagent tool: do the review in [code-reviewer.md](code-reviewer.md) yourself on the same range, as a separate pass after the last commit. Ledger `Final review: self-review (no subagent tool)`. The ready-to-merge summary says the only review was a self-review by the author.
+
+After a fallback review or a self-review, nothing merges until your human partner gives an explicit go for the current HEAD: superpowers:finishing-a-development-branch shows its menu and does not act on a `Finish branch:` line.
 
 ## Act on feedback
 

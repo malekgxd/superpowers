@@ -15,6 +15,7 @@ PINS=('Ask for the base only when it is unknown'
   '- Step 1 tests passed;'
   '- the branch is a named branch (a detached HEAD always gets the menu);'
   "- this session ran the review chain on the branch's current HEAD and it passed (a fresh or resumed session with no such record gets the menu);"
+  "- that review was a Sol review (after a fallback review or a self-review the menu is shown: no merge without your human partner's explicit go for the current HEAD);"
   'Act on the line only when all of these hold:'
   'exactly one line starting'
   '- the main checkout is already on the base branch and `git status --porcelain` there prints nothing;'

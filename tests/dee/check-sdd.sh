@@ -15,7 +15,7 @@ for s in 'form a wave and are dispatched together in one message, as foreground 
   'A changed path that belongs to no task in the wave stops the wave' \
   'Task <N>: complete (commit <sha7>, tests <summary>)' \
   'one such task at a time' \
-  'Start: <sha>'; do
+  'Start: <sha>' 'Task <N> (<plan-basename>):'; do
   grep -qF -- "$s" "$D/SKILL.md" && ok "SKILL.md has: $s" || bad "SKILL.md lacks: $s"
 done
 for s in 'Never dispatch multiple implementation subagents in parallel' 'review-package' 'task-reviewer' 'fix-loop' 'Fix-loop escalation' 're-review-prompt'; do
@@ -33,7 +33,7 @@ done
 for s in 'A task with a commit is complete even without its ledger line' 'git log <start sha>..HEAD'; do
   grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
 done
-for s in '--first-parent' 'counts only when it changes that task'; do
+for s in '--first-parent' 'carries this plan'"'"'s basename and it changes that task' 'rerun the full suite before any task that depends on it starts' 'Do not start a new end review'; do
   grep -qF -- "$s" "$D/references/resuming.md" && ok "resuming.md has: $s" || bad "resuming.md lacks: $s"
 done
 for s in 'Only tasks that could share a wave are batched' 'You still commit each task of a batch alone'; do
