@@ -17,7 +17,7 @@ EP=('superpowers:requesting-code-review' 'superpowers:receiving-code-review' 'su
 RC=('## Findings from the end review' 'model: fable' 'Reproduce each finding with a failing test or a command'
   'Groups that share a file are merged' 'does not delete, weaken or rewrite an existing test'
   'Neither the lead nor the fixers commit' '--base <reviewed commit>'
-  'More rounds run only on your human partner'"'"'s say' 'IMPLEMENT: One item at a time, test each'
+  'More than three rounds run only on your human partner'"'"'s say' 'with fewer than three fix rounds run: start the next round at item 1' 'IMPLEMENT: One item at a time, test each'
   'Where no subagent can be dispatched, you do items 1 to 4 yourself' 'Every finding left unfixed goes into the re-review'"'"'s focus text'
   'No finding reproduced: no fix commit and no re-review' 'Fix: reviewed <reviewed sha>`, commits the fixes as one commit' 'Review done: approve on <sha>' 'does not close it')
 VC=('Run the normal full suite on the fix commit' 'scripts/old-tests <reviewed sha> <fix sha> -- <suite command>'
